@@ -14,8 +14,6 @@ I am a 18 years old french student, working to get the **FullStack developer** s
 <img src="https://www.vectorlogo.zone/logos/nodejs/nodejs-icon.svg" width="50"></img>
 <img src="https://www.vectorlogo.zone/logos/mysql/mysql-icon.svg" width="50"></img>
 <img src="https://upload.vectorlogo.zone/logos/nextjs/images/abcffb25-b56d-475f-9c82-26818776dc33.svg" width="50"></img>
-<img src="https://www.vectorlogo.zone/logos/oracle/oracle-icon.svg" width="50"></img>
-
 
 ### 🔭 Achievements
 I got to participate to the CGL 2023, which is a national programming contest.
