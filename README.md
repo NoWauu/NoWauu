@@ -23,3 +23,6 @@ I got to participate to the CGL 2023, which is a national programming contest.
 
 ### 📫 How to reach me:
 - Discord : noway_y
+
+### Activity
+![](./profile-3d-contrib/profile-night-rainbow.svg)
