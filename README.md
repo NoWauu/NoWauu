@@ -1,6 +1,6 @@
 ### 💬 About me
 
-I am a 18 years old french student, working to get the **FullStack developer** status. I'm currently in BUT INFO, where I learn some things about programming and around that. I still learn other things in my spare time and I enjoy discovering new features and programming languages (even if I'm actually tired of Python tbh).
+I am a 18 years old french student, working to get the **FullStack developer** status. I'm currently in BUT INFO, where I learn some things about programming and around that. I still learn other things in my spare time and I enjoy discovering new features and programming languages.
 
 ### ⚙️ Skills
 <p style="display: inline;">
