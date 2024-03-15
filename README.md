@@ -25,7 +25,8 @@ For now I still am in the first year, but I will discover new things by the futu
 </p>
 
 ### 🔭 Achievements
-I got to participate to the CGL 2023, which is a national programming contest.
+I got to participate to the CGL 2023, which is a national programming contest (even if it's in paper).
+I also participated to the Nuit du c0de 2023, which is a 6h long coding contest.
 
 
 ### 📫 How to reach me:
