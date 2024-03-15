@@ -3,6 +3,12 @@
 I am a 18 year old french student, working to get the **FullStack developer** status. I'm currently in BUT INFO, where I learn some things about programming and around that. I still learn various things in my spare time and I enjoy discovering new features and programming languages as well as new technologies.
 I avoided frameworks until soon where I learnt `NextJS`, and I will learn multiple others, like `Vue.js` at school, but I'll keep learning on my side (things like C++/C#/Angular) while making projects to apply my skills.
 
+I discovered programming in Jr High school, where I started to ask myself how does games actually work. Then, I started reading and learning some things on my side, coding little things for myself in Java using the Spigot API, made for Minecraft plugins usage. Later on, I met a friend, @Altaks, who is the one who taught me all the Java essentials I did not know by the time.
+I started coding for friends, while keeping in touch with new updates. Then I discovered Python in high school and used that during all high school and even now in uni.
+I learnt C and RISC Assembly, JavaScript, jQuery, Web development (deeper that I already known) and Java. 
+
+For now I still am in first year but I will discover new things by the future 😉
+
 ### ⚙️ Skills
 <p style="display: inline;">
 <a href="https://java.com" target="_blank"><img src="https://raw.githubusercontent.com/teamedwardforever/Readme-Generator/71f25dd8b98329b168142a6b782a107b75eab178/svg/Skills/Languages/java-original.svg" alt="Java" width="40" height="40"/></a>
