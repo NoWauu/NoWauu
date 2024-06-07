@@ -5,7 +5,7 @@ I avoided frameworks until soon where I learnt `NextJS`, and I will learn multip
 
 I discovered programming in Jr High school, where I started to ask myself how does games actually work. Then, I started reading and learning some things on my side, coding little things for myself in Java using the *Spigot API*, made for Minecraft plugins usage. Later on, I met a friend who taught me all the `Java` and programming essentials I did not know by the time.
 I started coding for friends, while keeping in touch with new updates. Then I discovered `Python` in high school and used that during all high school and even now in uni.
-I learnt `C` and `RISC Assembly`, `JavaScript`, `jQuery`, Web development (deeper that I already knew) and `Java`. 
+I learnt `C` and `RISC Assembly`, `JavaScript`, `jQuery`, Web development (deeper that I already knew) and `Java` (that I already knew). 
 
 For now I still am in the first year, but I will discover new things by the future. 😉
 
@@ -29,6 +29,7 @@ I got to participate to the CGL 2023, which is a national programming contest (e
 
 I also participated to the Nuit du c0de 2023, which is a 6 hours long coding contest.
 
+I also did the 24h INFO, a cross-IUT contest with 24 hours of non-stop programming. It has 3 parts of 8 hours : algorithm, web and crypto/cybersecurity.
 
 ### 📫 How to reach me:
 - Discord : noway_y
