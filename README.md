@@ -15,6 +15,12 @@ I'm currently in sencond year of by diploma, and I will still discover new thing
 
 ### ⚙️ Skills
 
+#### Code editors / IDEs
+[![My Skills](https://skillicons.dev/icons?i=idea,pycharm,rider,webstorm,phpstorm,androidstudio,eclipse,vscode,vscodium,visualstudio,replit)](https://skill-icons-builder.vercel.app/)
+
+[![My Skills](https://skillicons.dev/icons?i=bash,cs,css,dart,html,java,javascript,latex,md,php,py,ts)](https://skill-icons-builder.vercel.app/)
+
+My Skills
 #### (Mostly used) Frontend
 
 <p style="display: inline;">
