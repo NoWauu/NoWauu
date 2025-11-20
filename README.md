@@ -1,6 +1,6 @@
 ### 💬 About me
 
-I am a 19 year old french student, working to get the **Full Stack developer** status. I'm currently in BUT INFO, where I learn some things about programming and around that. I still learn various things in my spare time and, I enjoy discovering new features and programming languages as well as new technologies.
+I am a 20 year old french student, working to get the **Full Stack developer** status. I'm currently in BUT INFO, where I learn some things about programming and around that. I still learn various things in my spare time and, I enjoy discovering new features and programming languages as well as new technologies.
 I avoided frameworks until soon when I learnt `NextJS`, and I will learn multiple others, like `Vue.js` at school, but I'll keep learning on my side (things like `C++`/`C#`/`Angular`) while making projects to apply my skills.
 
 I discovered programming in Jr High school, where I started to ask myself how does games actually work. Then, I started reading and learning some things on my side, coding little things for myself in Java using the *Spigot API*, made for Minecraft plugins usage. Later on, I met a friend who taught me all the `Java` and programming essentials I did not know by the time.
