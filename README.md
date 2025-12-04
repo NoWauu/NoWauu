@@ -11,7 +11,7 @@ For my second year of BUT, I had the possibility to get an apprenticeship, as lo
 I'm litteraly doing everything related the IT and that's what I was hoping to find, from development to technical installations to network administration, including Docker etc..
 There's still plenty of things for me to learn here and I'm really happy to discover things in that context.
 
-I'm currently in sencond year of by diploma, and I will still discover new things in the future. 😉
+I'm currently in third and last year of by diploma, and I will still discover new things in the future. 😉
 
 ### ⚙️ Skills
 
