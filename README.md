@@ -1,3 +1,5 @@
+<img width="1700" height="460" alt="github-header-banner" src="https://github.com/user-attachments/assets/90618daf-05c9-48bd-99e1-4ec5c487dfdf" />
+
 ### 💬 About me
 
 I am a 20 year old french student, working to get the **Full Stack developer** status. I'm currently in BUT INFO, where I learn some things about programming and around that. I still learn various things in my spare time and, I enjoy discovering new features and programming languages as well as new technologies.
