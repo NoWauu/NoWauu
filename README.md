@@ -7,11 +7,13 @@ I discovered programming in Jr High school, where I started to ask myself how do
 I started coding for friends, while keeping in touch with new updates. Then I discovered `Python` in high school and used that during all high school and even now in uni.
 I learnt `C` and `RISC Assembly`, `JavaScript`, `jQuery`, Web development (deeper that I already knew) and `Java` (that I already knew). 
 
-For my second year of BUT, I had the possibility to get an apprenticeship, as long as I find the contract myself. It wasn't easy, but I found one. There, I'm doing a lot of things, like C# .NET application using Blazor, Artificial Intelligence to fine-tune an OCR in Python using Deep Learning technologies, installing new servers in our datacenters, and there more!
+For my second year of BUT, I had the possibility to get an apprenticeship, as long as I find the contract myself. It wasn't easy, but I found one. There, I'm doing a lot of things, like C# .NET application using Blazor, Artificial Intelligence to fine-tune an OCR in Python using Deep Learning technologies, installing new servers in our datacenters, and more!
 I'm litteraly doing everything related the IT and that's what I was hoping to find, from development to technical installations to network administration, including Docker etc..
-There's still plenty of things for me to learn here and I'm really happy to discover things in that context.
+There's still plenty of things for me to learn here and I'm really happy to discover things in that context. They're very demanding
 
 I'm currently in third and last year of by diploma, and I will still discover new things in the future. 😉
+
+I'm orienting myself into a Master's degree, which is still kind of generalistic but axed into the application onto marine's data
 
 ### ⚙️ Skills
 
@@ -47,6 +49,8 @@ I also participated to the Nuit du c0de 2023, which is a 6 hours long coding con
 I also did the 24h INFO, a cross-IUT contest with 24 hours of non-stop programming. It has 3 parts of 8 hours : algorithm, web and crypto/cybersecurity.
 
 In 2024, I contested in the "Nuit de l'info". This is a competition where teams among every IUT from France get a national subject, along with various challenges, and they should organize themselves to code a website in a single night (meaning 16 hours non-stop). That was fun !
+
+Same thing for 2025 and 2026, I participated to the Nuit de l'Info again (see organization [if-sleep-break](https://github.com/if-sleep-break)) and the 24h info 2025 and 2026 (see repos [24 info 2025](https://github.com/NoWauu/24h_info_2025) and [24h info 2026](https://github.com/NoWauu/24h-info-2026)) 
 
 ### 📫 How to reach me:
 - Discord : noway_y
