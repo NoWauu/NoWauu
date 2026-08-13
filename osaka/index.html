@@ -1,0 +1,3255 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Osaka Tablette</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Refonte UX/UI complète de l'application tablette du Restaurant Osaka — commande à table, réservation, liste d'attente et design system.">
+<style>
+/* ==========================================================================
+   OSAKA — DESIGN SYSTEM
+   Tokens → Primitives → Composants → Écrans
+   Tablette paysage 10–13", tactile, cible 48–56 px minimum.
+   ========================================================================== */
+
+/* ---------- 1. TOKENS ---------- */
+:root{
+  /* Couleurs de fond */
+  --paper:#FCFAF6;         /* blanc cassé, fond général */
+  --cream:#F4EEE4;         /* crème, surfaces secondaires */
+  --sand:#EBE1D2;          /* beige */
+  --wood:#DCC7AB;          /* bois clair */
+  --surface:#FFFFFF;
+
+  /* Encres */
+  --ink:#191A1C;           /* noir doux, titres */
+  --ink-2:#33353A;         /* anthracite, corps */
+  --muted:#6B6E76;         /* infos secondaires */
+  --faint:#9A9CA3;         /* placeholder */
+  --line:#E7DFD3;          /* filets */
+  --line-strong:#D8CDBC;
+
+  /* Accent — rouge Osaka */
+  --osaka:#C0362D;
+  --osaka-deep:#96241D;
+  --osaka-ink:#7A1C16;
+  --osaka-soft:#FBEDEB;
+  --osaka-tint:#F6DDD9;
+
+  /* Sémantique */
+  --ok:#2E7D57;
+  --ok-soft:#E6F2EC;
+  --warn:#A97213;
+  --warn-soft:#FBF0DC;
+  --danger:#B3261E;
+  --danger-soft:#FBEAE8;
+  --info-soft:#EDF1F6;
+
+  /* Rayons */
+  --r-xs:8px; --r-sm:12px; --r-md:16px; --r-lg:22px; --r-xl:28px; --r-2xl:36px; --r-pill:999px;
+
+  /* Espacements (base 4) */
+  --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:20px; --s6:24px;
+  --s7:32px; --s8:40px; --s9:48px; --s10:64px; --s11:80px;
+
+  /* Ombres — teintées chaud, jamais grises */
+  --sh-1:0 1px 2px rgba(60,44,28,.05), 0 2px 6px rgba(60,44,28,.05);
+  --sh-2:0 2px 6px rgba(60,44,28,.06), 0 10px 24px rgba(60,44,28,.07);
+  --sh-3:0 6px 14px rgba(60,44,28,.08), 0 22px 48px rgba(60,44,28,.11);
+  --sh-4:0 12px 30px rgba(60,44,28,.12), 0 42px 90px rgba(45,32,20,.20);
+  --sh-red:0 6px 16px rgba(192,54,45,.24), 0 2px 4px rgba(192,54,45,.18);
+
+  /* Typographie */
+  --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",system-ui,"Noto Sans",sans-serif;
+  --font-display:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;
+
+  /* Cibles tactiles */
+  --tap:56px; --tap-sm:48px;
+
+  /* Mouvement — court, jamais spectaculaire */
+  --t-fast:120ms; --t:180ms; --t-slow:280ms;
+  --ease:cubic-bezier(.2,.7,.3,1);
+
+  /* Gabarit */
+  --topbar:78px;
+  --col-cat:236px;
+  --col-cart:378px;
+}
+
+/* ---------- 2. RESET / BASE ---------- */
+*,*::before,*::after{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  font-family:var(--font);
+  font-size:16px;
+  line-height:1.45;
+  color:var(--ink-2);
+  background:
+    radial-gradient(1200px 700px at 15% -10%, #F1E7D8 0%, rgba(241,231,216,0) 60%),
+    radial-gradient(900px 600px at 110% 110%, #EFE3D2 0%, rgba(239,227,210,0) 55%),
+    #E9E0D2;
+  -webkit-font-smoothing:antialiased;
+  -webkit-tap-highlight-color:transparent;
+  overflow:hidden;
+}
+button,input,textarea,select{font:inherit;color:inherit}
+button{border:0;background:none;cursor:pointer;padding:0;text-align:inherit}
+h1,h2,h3,h4,p,figure{margin:0}
+ul{margin:0;padding:0;list-style:none}
+:focus{outline:none}
+:focus-visible{outline:3px solid var(--osaka);outline-offset:3px;border-radius:6px}
+::selection{background:var(--osaka-tint)}
+
+/* Barres de défilement discrètes */
+.scroll{overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;scrollbar-width:thin;scrollbar-color:var(--line-strong) transparent}
+.scroll::-webkit-scrollbar{width:10px;height:10px}
+.scroll::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:99px;border:3px solid transparent;background-clip:content-box}
+.scroll::-webkit-scrollbar-track{background:transparent}
+
+/* ---------- 3. TYPOGRAPHIE ---------- */
+.t-display{font-family:var(--font-display);font-size:56px;line-height:1.04;letter-spacing:-.015em;color:var(--ink);font-weight:600}
+.t-h1{font-family:var(--font-display);font-size:38px;line-height:1.1;letter-spacing:-.01em;color:var(--ink);font-weight:600}
+.t-h2{font-size:27px;line-height:1.2;letter-spacing:-.01em;color:var(--ink);font-weight:700}
+.t-h3{font-size:21px;line-height:1.25;color:var(--ink);font-weight:700}
+.t-lead{font-size:19px;line-height:1.5;color:var(--muted)}
+.t-body{font-size:16px;line-height:1.5}
+.t-sm{font-size:14.5px;line-height:1.45;color:var(--muted)}
+.t-eyebrow{font-size:12.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.t-price{font-size:20px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+.num{font-variant-numeric:tabular-nums}
+.center{text-align:center}
+.mute{color:var(--muted)}
+
+/* Marque */
+.wordmark{font-family:var(--font-display);font-weight:600;letter-spacing:.22em;text-transform:uppercase}
+
+/* ---------- 4. APP SHELL ---------- */
+#device{
+  position:fixed;inset:0;margin:auto;
+  width:100%;max-width:1512px;height:100%;max-height:952px;
+  background:var(--paper);
+  border-radius:26px;
+  box-shadow:var(--sh-4);
+  overflow:hidden;
+  display:flex;flex-direction:column;
+  isolation:isolate;
+}
+@media (max-width:1000px),(max-height:760px){
+  #device{border-radius:0;max-width:none;max-height:none;box-shadow:none}
+}
+#screen{flex:1;min-height:0;position:relative;display:flex;flex-direction:column}
+
+/* Motif noren très léger, utilisé en fond de certaines zones */
+.noren-lines{
+  background-image:repeating-linear-gradient(90deg,rgba(25,26,28,.045) 0 1px,transparent 1px 34px);
+}
+.seigaiha{
+  background-image:radial-gradient(circle at 50% 100%, transparent 12px, rgba(25,26,28,.035) 12px 13px, transparent 13px);
+  background-size:40px 20px;
+}
+
+/* ---------- 5. TOPBAR ---------- */
+.topbar{
+  height:var(--topbar);flex:0 0 var(--topbar);
+  display:flex;align-items:center;gap:var(--s5);
+  padding:0 var(--s6);
+  background:rgba(252,250,246,.92);
+  backdrop-filter:saturate(1.4) blur(12px);
+  border-bottom:1px solid var(--line);
+  position:relative;z-index:30;
+}
+.brand{display:flex;align-items:center;gap:12px;flex:0 0 auto}
+.brand-sun{
+  width:38px;height:38px;border-radius:50%;
+  background:radial-gradient(circle at 34% 32%, #D8483F 0%, var(--osaka) 55%, var(--osaka-deep) 100%);
+  box-shadow:0 2px 8px rgba(192,54,45,.35);
+  flex:0 0 auto;
+}
+.brand-txt{display:flex;flex-direction:column;line-height:1}
+.brand-txt b{font-family:var(--font-display);font-size:21px;letter-spacing:.2em;color:var(--ink);font-weight:600}
+.brand-txt span{font-size:11px;letter-spacing:.1em;color:var(--muted);margin-top:3px}
+
+/* Navigation principale — segmentée, très tactile */
+.nav{display:flex;gap:6px;background:var(--cream);padding:5px;border-radius:var(--r-pill);margin:0 auto}
+.nav-item{
+  height:52px;min-width:120px;padding:0 var(--s5);
+  display:flex;align-items:center;justify-content:center;gap:9px;
+  border-radius:var(--r-pill);font-size:16px;font-weight:600;color:var(--ink-2);
+  transition:background var(--t) var(--ease),color var(--t) var(--ease),transform var(--t-fast) var(--ease);
+  position:relative;white-space:nowrap;
+}
+.nav-item svg{width:21px;height:21px;flex:0 0 auto}
+@media (hover:hover){.nav-item:hover{background:rgba(255,255,255,.72)}}
+.nav-item:active{transform:scale(.97)}
+.nav-item[aria-current="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--sh-1);font-weight:700}
+.nav-item[aria-current="true"]::after{
+  content:"";position:absolute;bottom:7px;left:50%;transform:translateX(-50%);
+  width:20px;height:3px;border-radius:2px;background:var(--osaka);
+}
+.nav-dot{
+  min-width:24px;height:24px;padding:0 7px;border-radius:99px;background:var(--osaka);color:#fff;
+  font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;
+}
+
+.topbar-right{display:flex;align-items:center;gap:var(--s3);flex:0 0 auto}
+
+/* Numéro de table — élément d'identité fort */
+.table-badge{
+  display:flex;align-items:center;gap:11px;height:52px;padding:0 var(--s5) 0 12px;
+  background:var(--ink);color:#fff;border-radius:var(--r-pill);box-shadow:var(--sh-2);
+}
+.table-badge .tb-num{
+  width:34px;height:34px;border-radius:50%;background:var(--osaka);
+  display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;
+}
+.table-badge .tb-lbl{display:flex;flex-direction:column;line-height:1.1}
+.table-badge .tb-lbl small{font-size:11px;letter-spacing:.12em;text-transform:uppercase;opacity:.62}
+.table-badge .tb-lbl b{font-size:16px;font-weight:700}
+
+/* ---------- 6. BOUTONS ---------- */
+.btn{
+  --btn-h:var(--tap);
+  display:inline-flex;align-items:center;justify-content:center;gap:10px;
+  height:var(--btn-h);min-height:var(--btn-h);padding:0 var(--s6);
+  border-radius:var(--r-pill);font-size:17px;font-weight:700;letter-spacing:.005em;
+  transition:transform var(--t-fast) var(--ease),box-shadow var(--t) var(--ease),
+             background var(--t) var(--ease),color var(--t) var(--ease),opacity var(--t) var(--ease);
+  position:relative;overflow:hidden;user-select:none;white-space:nowrap;
+}
+.btn svg{width:22px;height:22px;flex:0 0 auto}
+.btn:active{transform:scale(.975)}
+.btn[disabled],.btn[aria-disabled="true"]{pointer-events:none;opacity:.45}
+.btn.is-loading{color:transparent!important;pointer-events:none}
+.btn.is-loading::after{
+  content:"";position:absolute;inset:0;margin:auto;width:22px;height:22px;border-radius:50%;
+  border:3px solid rgba(255,255,255,.35);border-top-color:#fff;animation:spin .7s linear infinite;
+}
+.btn-secondary.is-loading::after,.btn-tertiary.is-loading::after{border-color:rgba(25,26,28,.2);border-top-color:var(--ink)}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Primaire — l'action que le client veut faire maintenant */
+.btn-primary{background:var(--osaka);color:#fff;box-shadow:var(--sh-red)}
+@media (hover:hover){.btn-primary:hover{background:var(--osaka-deep)}}
+.btn-primary:active{background:var(--osaka-deep);box-shadow:0 2px 6px rgba(192,54,45,.3)}
+/* Secondaire */
+.btn-secondary{background:var(--surface);color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--line-strong),var(--sh-1)}
+@media (hover:hover){.btn-secondary:hover{background:var(--cream)}}
+.btn-secondary:active{background:var(--sand)}
+/* Tertiaire */
+.btn-tertiary{background:transparent;color:var(--ink-2);font-weight:600}
+@media (hover:hover){.btn-tertiary:hover{background:rgba(25,26,28,.055)}}
+.btn-tertiary:active{background:rgba(25,26,28,.09)}
+/* Sombre & danger */
+.btn-dark{background:var(--ink);color:#fff;box-shadow:var(--sh-2)}
+.btn-dark:active{background:#000}
+.btn-danger{background:var(--danger-soft);color:var(--danger);box-shadow:inset 0 0 0 1.5px rgba(179,38,30,.22)}
+@media (hover:hover){.btn-danger:hover{background:#F7DCD9}}
+/* Tailles */
+.btn-lg{--btn-h:68px;font-size:19px;padding:0 var(--s7)}
+.btn-xl{--btn-h:78px;font-size:21px;padding:0 var(--s8)}
+.btn-sm{--btn-h:var(--tap-sm);font-size:15.5px;padding:0 var(--s5)}
+.btn-block{display:flex;width:100%}
+.btn-split{justify-content:space-between;gap:var(--s3)}
+.btn{max-width:100%}
+.pd-foot .btn{padding:0 var(--s5)}
+
+/* Bouton iconographique — jamais en dessous de 48 px */
+.icon-btn{
+  width:var(--tap);height:var(--tap);border-radius:var(--r-pill);
+  display:inline-flex;align-items:center;justify-content:center;
+  background:var(--surface);color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--line-strong),var(--sh-1);
+  transition:background var(--t) var(--ease),transform var(--t-fast) var(--ease);
+}
+.icon-btn svg{width:24px;height:24px}
+@media (hover:hover){.icon-btn:hover{background:var(--cream)}}
+.icon-btn:active{transform:scale(.94);background:var(--sand)}
+.icon-btn-ghost{background:transparent;box-shadow:none}
+@media (hover:hover){.icon-btn-ghost:hover{background:rgba(25,26,28,.06)}}
+.icon-btn-sm{width:var(--tap-sm);height:var(--tap-sm)}
+.icon-btn-sm svg{width:21px;height:21px}
+
+/* ---------- 7. BADGES / CHIPS ---------- */
+.badge{
+  display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 12px;border-radius:var(--r-pill);
+  font-size:13px;font-weight:700;letter-spacing:.01em;background:var(--cream);color:var(--ink-2);white-space:nowrap;
+}
+.badge svg{width:15px;height:15px}
+.badge-pop{background:var(--osaka);color:#fff}
+.badge-new{background:var(--ink);color:#fff}
+.badge-spicy{background:var(--danger-soft);color:var(--danger)}
+.badge-veg{background:var(--ok-soft);color:var(--ok)}
+.badge-chef{background:#F0E6D2;color:#7A5A16}
+.badge-gf{background:var(--info-soft);color:#3A5474}
+.badge-out{background:rgba(25,26,28,.82);color:#fff}
+
+.chip{
+  display:inline-flex;align-items:center;gap:8px;height:var(--tap-sm);padding:0 var(--s5);
+  border-radius:var(--r-pill);background:var(--surface);color:var(--ink-2);font-size:15.5px;font-weight:600;
+  box-shadow:inset 0 0 0 1.5px var(--line);transition:all var(--t) var(--ease);white-space:nowrap;
+}
+@media (hover:hover){.chip:hover{box-shadow:inset 0 0 0 1.5px var(--line-strong);background:var(--cream)}}
+.chip:active{transform:scale(.97)}
+.chip[aria-pressed="true"],.chip.is-selected{background:var(--ink);color:#fff;box-shadow:none;font-weight:700}
+.chip-allergen{background:var(--cream);box-shadow:none;height:40px;font-size:15px;color:var(--ink-2)}
+
+/* ---------- 8. CARTES ---------- */
+.card{background:var(--surface);border-radius:var(--r-lg);box-shadow:var(--sh-1);overflow:hidden}
+.card-pad{padding:var(--s6)}
+.panel{background:var(--surface);border-radius:var(--r-xl);box-shadow:var(--sh-2)}
+
+/* ---------- 9. CHAMPS ---------- */
+.field{display:block}
+.field-label{display:block;font-size:15px;font-weight:700;color:var(--ink);margin-bottom:9px}
+.field-hint{font-size:14px;color:var(--muted);margin-top:8px}
+.input,.textarea{
+  width:100%;min-height:var(--tap);padding:15px var(--s5);
+  background:var(--surface);border:1.5px solid var(--line-strong);border-radius:var(--r-md);
+  font-size:17px;color:var(--ink);transition:border-color var(--t) var(--ease),box-shadow var(--t) var(--ease);
+}
+.input::placeholder,.textarea::placeholder{color:var(--faint)}
+.input:focus,.textarea:focus{border-color:var(--osaka);box-shadow:0 0 0 4px var(--osaka-soft)}
+.textarea{min-height:104px;resize:none;line-height:1.5}
+.input-lg{min-height:68px;font-size:23px;font-weight:600;letter-spacing:.04em}
+.field.has-error .input,.field.has-error .textarea{border-color:var(--danger);box-shadow:0 0 0 4px var(--danger-soft)}
+.err-msg{display:flex;align-items:center;gap:8px;margin-top:9px;color:var(--danger);font-size:14.5px;font-weight:600}
+.err-msg svg{width:18px;height:18px;flex:0 0 auto}
+
+/* Recherche */
+.search{position:relative;flex:1;min-width:0}
+.search .s-ico{position:absolute;left:19px;top:50%;transform:translateY(-50%);display:flex;color:var(--muted);pointer-events:none}
+.search .s-ico svg{width:22px;height:22px}
+.search input{
+  width:100%;height:var(--tap);padding:0 52px 0 52px;border-radius:var(--r-pill);
+  background:var(--surface);border:1.5px solid var(--line);font-size:16.5px;
+  transition:border-color var(--t) var(--ease),box-shadow var(--t) var(--ease);
+}
+.search input:focus{border-color:var(--osaka);box-shadow:0 0 0 4px var(--osaka-soft)}
+.search .s-clear{position:absolute;right:6px;top:50%;transform:translateY(-50%)}
+
+/* Interrupteur */
+.switch{display:flex;align-items:center;gap:14px;min-height:var(--tap);cursor:pointer;user-select:none}
+.switch-track{
+  width:62px;height:36px;border-radius:99px;background:var(--line-strong);position:relative;flex:0 0 auto;
+  transition:background var(--t) var(--ease);
+}
+.switch-track::after{
+  content:"";position:absolute;top:3px;left:3px;width:30px;height:30px;border-radius:50%;background:#fff;
+  box-shadow:var(--sh-1);transition:transform var(--t) var(--ease);
+}
+.switch[aria-checked="true"] .switch-track{background:var(--ok)}
+.switch[aria-checked="true"] .switch-track::after{transform:translateX(26px)}
+
+/* ---------- 10. SÉLECTEUR DE QUANTITÉ (tactile, jamais minuscule) ---------- */
+.qty{
+  display:inline-flex;align-items:center;background:var(--cream);border-radius:var(--r-pill);
+  padding:4px;box-shadow:inset 0 0 0 1.5px var(--line);
+}
+.qty button{
+  width:52px;height:52px;border-radius:50%;background:var(--surface);color:var(--ink);
+  display:flex;align-items:center;justify-content:center;box-shadow:var(--sh-1);
+  transition:transform var(--t-fast) var(--ease),background var(--t) var(--ease),color var(--t) var(--ease);
+}
+.qty button svg{width:22px;height:22px}
+@media (hover:hover){.qty button:hover{background:var(--ink);color:#fff}}
+.qty button:active{transform:scale(.9)}
+.qty button[disabled]{opacity:.35;pointer-events:none}
+.qty .q-val{min-width:56px;text-align:center;font-size:21px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums}
+.qty-lg button{width:60px;height:60px}
+.qty-lg .q-val{min-width:64px;font-size:24px}
+.qty-sm button{width:46px;height:46px}
+.qty-sm .q-val{min-width:46px;font-size:19px}
+.q-bump{animation:qbump .26s var(--ease)}
+@keyframes qbump{0%{transform:scale(1)}45%{transform:scale(1.22)}100%{transform:scale(1)}}
+
+/* Bouton de suppression — discret mais atteignable */
+.qty .q-trash{color:var(--danger)}
+@media (hover:hover){.qty .q-trash:hover{background:var(--danger);color:#fff}}
+
+/* ---------- 11. STEPPER / PROGRESSION ---------- */
+.stepper{display:flex;align-items:center;gap:10px}
+.step{display:flex;align-items:center;gap:10px;flex:0 0 auto}
+.step-bullet{
+  width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  background:var(--cream);color:var(--muted);font-size:14.5px;font-weight:800;flex:0 0 auto;
+  box-shadow:inset 0 0 0 1.5px var(--line-strong);transition:all var(--t) var(--ease);
+}
+.step-lbl{font-size:15px;font-weight:600;color:var(--muted);white-space:nowrap}
+.step.is-done .step-bullet{background:var(--ok);color:#fff;box-shadow:none}
+.step.is-current .step-bullet{background:var(--osaka);color:#fff;box-shadow:0 0 0 5px var(--osaka-soft)}
+.step.is-current .step-lbl{color:var(--ink);font-weight:700}
+.step-sep{width:26px;height:2px;border-radius:2px;background:var(--line-strong);flex:0 0 auto}
+.step.is-done+.step-sep{background:var(--ok)}
+@media (max-width:1080px){.step-lbl{display:none}.step-sep{width:18px}}
+
+.progress{height:6px;border-radius:99px;background:var(--sand);overflow:hidden}
+.progress i{display:block;height:100%;background:var(--osaka);border-radius:99px;transition:width var(--t-slow) var(--ease)}
+
+/* ---------- 12. MODALES / TIROIRS / BOTTOM SHEETS ---------- */
+.overlay{
+  position:absolute;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;
+  background:rgba(30,22,14,.42);backdrop-filter:blur(3px);
+  animation:fade var(--t) var(--ease);padding:var(--s6);
+}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.overlay.is-closing{animation:fadeout var(--t) var(--ease) forwards}
+@keyframes fadeout{to{opacity:0}}
+
+.modal{
+  background:var(--paper);border-radius:var(--r-2xl);box-shadow:var(--sh-4);
+  width:min(620px,100%);max-height:100%;display:flex;flex-direction:column;overflow:hidden;
+  animation:pop var(--t-slow) var(--ease);
+}
+@keyframes pop{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:none}}
+.modal-wide{width:min(1040px,100%)}
+.modal-head{display:flex;align-items:center;gap:var(--s4);padding:var(--s6) var(--s6) var(--s4)}
+.modal-body{padding:0 var(--s6) var(--s6);overflow-y:auto}
+.modal-foot{padding:var(--s5) var(--s6);border-top:1px solid var(--line);background:var(--surface);display:flex;gap:var(--s3)}
+
+/* Tiroir droit (fiche produit sur tablette paysage) */
+.drawer-wrap{position:absolute;inset:0;z-index:60;display:flex;justify-content:flex-end;background:rgba(30,22,14,.42);backdrop-filter:blur(3px);animation:fade var(--t) var(--ease)}
+.drawer{
+  width:min(600px,94%);height:100%;background:var(--paper);box-shadow:var(--sh-4);
+  display:flex;flex-direction:column;animation:slidein var(--t-slow) var(--ease);
+}
+@keyframes slidein{from{transform:translateX(40px);opacity:.4}to{transform:none;opacity:1}}
+
+/* Bottom sheet (portrait / actions rapides) */
+.sheet-wrap{position:absolute;inset:0;z-index:70;display:flex;align-items:flex-end;background:rgba(30,22,14,.42);backdrop-filter:blur(3px);animation:fade var(--t) var(--ease)}
+.sheet{
+  width:100%;background:var(--paper);border-radius:var(--r-2xl) var(--r-2xl) 0 0;box-shadow:var(--sh-4);
+  max-height:88%;display:flex;flex-direction:column;animation:sheetup var(--t-slow) var(--ease);padding-bottom:var(--s4);
+}
+@keyframes sheetup{from{transform:translateY(60px)}to{transform:none}}
+.sheet-grab{width:52px;height:5px;border-radius:99px;background:var(--line-strong);margin:12px auto 4px}
+
+/* ---------- 13. TOASTS ---------- */
+#toasts{position:absolute;left:0;right:0;bottom:26px;z-index:90;display:flex;flex-direction:column;align-items:center;gap:10px;pointer-events:none}
+.toast{
+  display:flex;align-items:center;gap:13px;padding:15px var(--s6);border-radius:var(--r-pill);
+  background:var(--ink);color:#fff;box-shadow:var(--sh-3);font-size:16px;font-weight:600;
+  animation:toastin var(--t-slow) var(--ease);max-width:90%;
+}
+.toast svg{width:22px;height:22px;flex:0 0 auto}
+.toast.is-out{animation:toastout var(--t) var(--ease) forwards}
+.toast-ok svg{color:#7BD8A8}
+.toast-err{background:var(--danger)}
+@keyframes toastin{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@keyframes toastout{to{opacity:0;transform:translateY(10px)}}
+
+/* ---------- 14. SKELETONS & CHARGEMENT ---------- */
+.sk{background:linear-gradient(100deg,var(--cream) 30%,#FBF6EE 50%,var(--cream) 70%);background-size:220% 100%;animation:shimmer 1.3s infinite linear;border-radius:var(--r-sm)}
+@keyframes shimmer{to{background-position:-220% 0}}
+.sk-card{border-radius:var(--r-lg);overflow:hidden;background:var(--surface);box-shadow:var(--sh-1)}
+.sk-img{aspect-ratio:4/3;width:100%}
+.sk-line{height:14px;border-radius:99px}
+.spinner{width:26px;height:26px;border-radius:50%;border:3px solid var(--line-strong);border-top-color:var(--osaka);animation:spin .7s linear infinite}
+
+/* ---------- 15. ÉTATS VIDES / ERREURS ---------- */
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:var(--s8) var(--s6);gap:var(--s4);height:100%}
+.empty-ill{width:112px;height:112px;border-radius:50%;background:var(--cream);display:flex;align-items:center;justify-content:center;color:var(--osaka);box-shadow:inset 0 0 0 1.5px var(--line)}
+.empty-ill svg{width:50px;height:50px}
+.notice{display:flex;gap:14px;padding:var(--s4) var(--s5);border-radius:var(--r-md);background:var(--warn-soft);color:#6E4A0C;font-size:15px;line-height:1.45}
+.notice svg{width:22px;height:22px;flex:0 0 auto;color:var(--warn)}
+.notice-info{background:var(--info-soft);color:#33455E}
+.notice-info svg{color:#4A6690}
+.notice-danger{background:var(--danger-soft);color:#7C1E18}
+.notice-danger svg{color:var(--danger)}
+
+/* ---------- 16. ÉCRAN CARTE — 3 zones paysage ---------- */
+.menu-layout{flex:1;min-height:0;display:grid;grid-template-columns:var(--col-cat) minmax(0,1fr) var(--col-cart)}
+
+/* Colonne catégories */
+.cats{
+  border-right:1px solid var(--line);background:var(--cream);
+  display:flex;flex-direction:column;min-height:0;
+}
+.cats-head{padding:var(--s5) var(--s5) var(--s3)}
+.cats-list{flex:1;min-height:0;padding:0 var(--s3) var(--s4);display:flex;flex-direction:column;gap:5px}
+.cat{
+  display:flex;align-items:center;gap:11px;min-height:56px;padding:8px 12px;border-radius:var(--r-md);
+  color:var(--ink-2);font-size:15.5px;font-weight:600;text-align:left;position:relative;
+  transition:background var(--t) var(--ease),color var(--t) var(--ease),transform var(--t-fast) var(--ease);
+}
+.cat-ico{width:36px;height:36px;border-radius:10px;background:var(--surface);display:flex;align-items:center;justify-content:center;flex:0 0 auto;box-shadow:var(--sh-1);transition:all var(--t) var(--ease)}
+.cat-ico svg{width:21px;height:21px;color:var(--ink-2)}
+.cat-n{flex:1;min-width:0;line-height:1.2;overflow-wrap:break-word}
+.cat-count{font-size:13.5px;color:var(--faint);font-weight:700}
+@media (hover:hover){.cat:hover{background:rgba(255,255,255,.72)}}
+.cat:active{transform:scale(.985)}
+.cat[aria-selected="true"]{background:var(--ink);color:#fff;box-shadow:var(--sh-2)}
+.cat[aria-selected="true"] .cat-ico{background:var(--osaka)}
+.cat[aria-selected="true"] .cat-ico svg{color:#fff}
+.cat[aria-selected="true"] .cat-count{color:rgba(255,255,255,.55)}
+
+/* Zone catalogue */
+.catalog{display:flex;flex-direction:column;min-height:0;background:var(--paper)}
+.catalog-head{padding:var(--s5) var(--s6) var(--s4);display:flex;flex-direction:column;gap:var(--s4);border-bottom:1px solid var(--line)}
+.catalog-title-row{display:flex;align-items:flex-end;justify-content:space-between;gap:var(--s5)}
+.catalog-tools{display:flex;gap:var(--s3);align-items:center}
+.catalog-body{flex:1;min-height:0;padding:var(--s6)}
+.grid-products{display:grid;grid-template-columns:repeat(auto-fill,minmax(232px,1fr));gap:var(--s4)}
+
+
+/* Carte produit */
+.p-card{
+  background:var(--surface);border-radius:var(--r-lg);box-shadow:var(--sh-1);overflow:hidden;
+  display:flex;flex-direction:column;text-align:left;position:relative;
+  transition:transform var(--t) var(--ease),box-shadow var(--t) var(--ease);
+}
+@media (hover:hover){.p-card:hover{transform:translateY(-3px);box-shadow:var(--sh-3)}}
+.p-card:active{transform:translateY(-1px) scale(.99)}
+.p-media{position:relative;aspect-ratio:4/3;overflow:hidden;background:var(--cream)}
+.p-media .dish-art{width:100%;height:100%;display:block}
+.p-badges{position:absolute;top:12px;left:12px;display:flex;gap:6px;flex-wrap:wrap;max-width:calc(100% - 24px)}
+.p-body{padding:var(--s4) var(--s4) var(--s5);display:flex;flex-direction:column;gap:7px;flex:1}
+.p-name{font-size:18px;font-weight:700;color:var(--ink);line-height:1.25}
+.p-desc{font-size:14.5px;color:var(--muted);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.p-foot{margin-top:auto;padding-top:var(--s3);display:flex;align-items:center;justify-content:space-between;gap:10px}
+.p-foot .t-price{white-space:nowrap}
+.p-add{
+  height:var(--tap-sm);min-width:var(--tap-sm);padding:0 15px;border-radius:var(--r-pill);
+  background:var(--osaka);color:#fff;font-size:15px;font-weight:700;white-space:nowrap;
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;box-shadow:var(--sh-red);
+  transition:transform var(--t-fast) var(--ease),background var(--t) var(--ease),width var(--t) var(--ease);
+}
+.p-add svg{width:19px;height:19px}
+@media (hover:hover){.p-add:hover{background:var(--osaka-deep)}}
+.p-add:active{transform:scale(.93)}
+.p-add.is-added{background:var(--ok)}
+/* Produit indisponible */
+.p-card.is-out .p-media .dish-art{filter:grayscale(.85) contrast(.9);opacity:.55}
+.p-card.is-out .p-name,.p-card.is-out .t-price{color:var(--muted)}
+.p-out-tag{position:absolute;inset:auto 0 0 0;padding:10px 14px;background:rgba(25,26,28,.86);color:#fff;font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px}
+.p-out-tag svg{width:17px;height:17px}
+.p-add[disabled]{background:var(--cream);color:var(--faint);box-shadow:none}
+/* Compteur "déjà dans le panier" */
+.p-incart{
+  position:absolute;top:12px;right:12px;min-width:34px;height:34px;padding:0 10px;border-radius:99px;
+  background:var(--ink);color:#fff;font-size:15px;font-weight:800;display:flex;align-items:center;justify-content:center;
+  box-shadow:var(--sh-2);
+}
+
+/* ---------- 17. PANIER SIDEBAR ---------- */
+.cart{
+  border-left:1px solid var(--line);background:var(--surface);
+  display:flex;flex-direction:column;min-height:0;box-shadow:-18px 0 40px rgba(60,44,28,.05);
+}
+.cart-head{padding:var(--s5) var(--s5) var(--s4);border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:var(--s3)}
+.cart-items{flex:1;min-height:0;padding:var(--s4) var(--s5);display:flex;flex-direction:column;gap:var(--s3)}
+.c-item{background:var(--paper);border-radius:var(--r-md);padding:var(--s4);display:flex;flex-direction:column;gap:11px;animation:citemin var(--t-slow) var(--ease)}
+@keyframes citemin{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+.c-top{display:flex;gap:12px;align-items:flex-start}
+.c-thumb{width:54px;height:54px;border-radius:var(--r-sm);overflow:hidden;flex:0 0 auto;background:var(--cream)}
+.c-thumb .dish-art{width:100%;height:100%}
+.c-name{font-size:16px;font-weight:700;color:var(--ink);line-height:1.25}
+.c-opts{font-size:13.5px;color:var(--muted);line-height:1.35;margin-top:3px}
+.c-note{font-size:13.5px;color:var(--osaka-ink);background:var(--osaka-soft);border-radius:8px;padding:6px 10px;margin-top:6px;display:flex;gap:7px;align-items:flex-start}
+.c-note svg{width:15px;height:15px;flex:0 0 auto;margin-top:2px}
+.c-bottom{display:flex;align-items:center;justify-content:space-between;gap:var(--s3)}
+.c-edit{font-size:14.5px;font-weight:700;color:var(--ink-2);text-decoration:underline;text-underline-offset:3px;padding:8px 4px;min-height:var(--tap-sm);display:inline-flex;align-items:center}
+.cart-foot{border-top:1px solid var(--line);padding:var(--s5);background:var(--surface);display:flex;flex-direction:column;gap:var(--s4)}
+.totals{display:flex;flex-direction:column;gap:9px}
+.trow{display:flex;justify-content:space-between;align-items:baseline;font-size:16px;color:var(--muted)}
+.trow b{color:var(--ink-2);font-weight:600;font-variant-numeric:tabular-nums}
+.trow-total{font-size:21px;color:var(--ink);font-weight:800;padding-top:10px;border-top:1px dashed var(--line-strong)}
+.trow-total b{font-size:26px;color:var(--ink);font-weight:800}
+.cart-cta{--btn-h:72px;font-size:19px}
+
+/* ---------- 18. ÉCRANS GÉNÉRIQUES ---------- */
+.page{flex:1;min-height:0;display:flex;flex-direction:column}
+.page-body{flex:1;min-height:0}
+.wrap{max-width:1180px;margin:0 auto;padding:var(--s7) var(--s8) var(--s9);width:100%}
+.wrap-narrow{max-width:820px}
+.page-head{display:flex;align-items:center;gap:var(--s4);padding:var(--s5) var(--s7);border-bottom:1px solid var(--line);background:rgba(252,250,246,.9)}
+
+/* ---------- 19. ACCUEIL ---------- */
+.home{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr)}
+.home-left{padding:var(--s7) var(--s8) var(--s6);display:flex;flex-direction:column;justify-content:safe center;gap:var(--s5);min-width:0}
+.home-hero-mark{display:flex;align-items:center;gap:var(--s4)}
+.home-sun{width:58px;height:58px;border-radius:50%;background:radial-gradient(circle at 34% 32%,#D8483F 0%,var(--osaka) 55%,var(--osaka-deep) 100%);box-shadow:0 8px 24px rgba(192,54,45,.3)}
+.home-name{font-family:var(--font-display);font-size:54px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink);font-weight:600;line-height:1}
+.home-sub{font-size:15.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);margin-top:5px}
+.home-meta{display:flex;align-items:center;gap:var(--s4);flex-wrap:wrap}
+.rating{display:flex;align-items:center;gap:8px;font-size:15.5px;font-weight:700;color:var(--ink)}
+.rating svg{width:19px;height:19px;color:#D9A21B}
+.dot-sep{width:4px;height:4px;border-radius:50%;background:var(--line-strong)}
+.home-actions{display:flex;flex-direction:column;gap:var(--s3)}
+.action-card{
+  display:flex;align-items:center;gap:var(--s5);padding:var(--s4) var(--s5);min-height:92px;
+  background:var(--surface);border-radius:var(--r-xl);box-shadow:var(--sh-2);text-align:left;
+  transition:transform var(--t) var(--ease),box-shadow var(--t) var(--ease);position:relative;overflow:hidden;
+}
+@media (hover:hover){.action-card:hover{transform:translateY(-3px);box-shadow:var(--sh-3)}}
+.action-card:active{transform:translateY(0) scale(.99)}
+.action-ico{width:56px;height:56px;border-radius:var(--r-lg);display:flex;align-items:center;justify-content:center;flex:0 0 auto;background:var(--cream);color:var(--ink)}
+.action-ico svg{width:30px;height:30px}
+.action-txt{flex:1;min-width:0}
+.action-txt b{display:block;font-size:21px;font-weight:700;color:var(--ink);line-height:1.2}
+.action-txt span{display:block;font-size:15.5px;color:var(--muted);margin-top:5px;line-height:1.35}
+.action-arrow{width:46px;height:46px;border-radius:50%;background:var(--cream);display:flex;align-items:center;justify-content:center;color:var(--ink-2);flex:0 0 auto;transition:all var(--t) var(--ease)}
+.action-arrow svg{width:22px;height:22px}
+.action-card-primary{background:var(--osaka);box-shadow:var(--sh-red)}
+.action-card-primary .action-txt b{color:#fff;font-size:23px}
+.action-card-primary .action-txt span{color:rgba(255,255,255,.82)}
+.action-card-primary .action-ico{background:rgba(255,255,255,.16);color:#fff}
+.action-card-primary .action-arrow{background:rgba(255,255,255,.16);color:#fff}
+.action-card-primary::after{
+  content:"";position:absolute;right:-40px;top:-60px;width:200px;height:200px;border-radius:50%;
+  background:rgba(255,255,255,.07);
+}
+.home-right{position:relative;overflow:hidden;background:var(--cream)}
+.home-art{position:absolute;inset:0}
+.home-art svg{width:100%;height:100%;display:block}
+.home-quote{
+  position:absolute;left:var(--s7);right:var(--s7);bottom:var(--s7);
+  background:rgba(25,26,28,.72);backdrop-filter:blur(8px);color:#fff;border-radius:var(--r-lg);padding:var(--s5) var(--s6);
+}
+.home-quote b{display:block;font-family:var(--font-display);font-size:22px;margin-bottom:6px}
+.home-quote span{font-size:15px;color:rgba(255,255,255,.78);line-height:1.45}
+.home-foot{display:flex;gap:var(--s3);align-items:center;margin-top:var(--s4)}
+
+/* ---------- 20. FICHE PRODUIT ---------- */
+.pd-media{position:relative;aspect-ratio:16/10;flex:0 0 auto;background:var(--cream)}
+.pd-media .dish-art{width:100%;height:100%}
+.pd-close{position:absolute;top:14px;right:14px;background:rgba(252,250,246,.94);box-shadow:var(--sh-2)}
+.pd-badges{position:absolute;left:16px;bottom:16px;display:flex;gap:7px;flex-wrap:wrap}
+.pd-body{flex:1;min-height:0;padding:var(--s6);display:flex;flex-direction:column;gap:var(--s6)}
+.pd-title-row{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--s5)}
+.opt-group{display:flex;flex-direction:column;gap:var(--s3)}
+.opt-head{display:flex;align-items:baseline;justify-content:space-between;gap:var(--s3)}
+.opt-req{font-size:12.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--osaka)}
+.opt-opt{font-size:12.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+.opt-list{display:flex;flex-direction:column;gap:10px}
+.opt{
+  display:flex;align-items:center;gap:var(--s4);min-height:64px;padding:12px var(--s5);
+  background:var(--surface);border-radius:var(--r-md);box-shadow:inset 0 0 0 1.5px var(--line);
+  transition:box-shadow var(--t) var(--ease),background var(--t) var(--ease),transform var(--t-fast) var(--ease);text-align:left;
+}
+@media (hover:hover){.opt:hover{background:var(--cream)}}
+.opt:active{transform:scale(.99)}
+.opt-mark{width:28px;height:28px;border-radius:50%;box-shadow:inset 0 0 0 2px var(--line-strong);flex:0 0 auto;display:flex;align-items:center;justify-content:center;transition:all var(--t) var(--ease)}
+.opt-mark svg{width:17px;height:17px;color:#fff;opacity:0;transition:opacity var(--t) var(--ease)}
+.opt-sq{border-radius:9px}
+.opt-lbl{flex:1;font-size:17px;font-weight:600;color:var(--ink)}
+.opt-price{font-size:16px;font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums}
+.opt[aria-checked="true"]{box-shadow:inset 0 0 0 2.5px var(--osaka);background:var(--osaka-soft)}
+.opt[aria-checked="true"] .opt-mark{background:var(--osaka);box-shadow:none}
+.opt[aria-checked="true"] .opt-mark svg{opacity:1}
+.opt[aria-checked="true"] .opt-price{color:var(--osaka-ink)}
+.opt[data-disabled="true"]{opacity:.4;pointer-events:none}
+.pd-foot{flex:0 0 auto;padding:var(--s5) var(--s6);border-top:1px solid var(--line);background:var(--surface);display:flex;gap:var(--s4);align-items:center}
+.allergen-row{display:flex;flex-wrap:wrap;gap:8px}
+
+/* ---------- 21. PANIER COMPLET ---------- */
+.cart-full{display:grid;grid-template-columns:minmax(0,1fr) 420px;gap:var(--s6);align-items:start}
+@media (max-width:1180px){.cart-full{grid-template-columns:1fr}}
+.cf-item{display:flex;gap:var(--s5);padding:var(--s5);background:var(--surface);border-radius:var(--r-lg);box-shadow:var(--sh-1);align-items:center}
+.cf-thumb{width:132px;height:104px;border-radius:var(--r-md);overflow:hidden;flex:0 0 auto;background:var(--cream)}
+.cf-thumb .dish-art{width:100%;height:100%}
+.cf-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:7px}
+.cf-actions{display:flex;flex-direction:column;align-items:flex-end;gap:12px;flex:0 0 auto}
+.summary-sticky{position:sticky;top:var(--s6)}
+
+/* ---------- 22. CONFIRMATION / SUCCÈS ---------- */
+.success{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:var(--s5);text-align:center;height:100%;padding:var(--s7)}
+.success-mark{width:132px;height:132px;border-radius:50%;background:var(--ok-soft);display:flex;align-items:center;justify-content:center;position:relative}
+.success-mark::before{content:"";position:absolute;inset:-14px;border-radius:50%;border:2px solid var(--ok);opacity:.28;animation:ring 1.6s var(--ease) infinite}
+@keyframes ring{0%{transform:scale(.86);opacity:.4}70%{transform:scale(1.1);opacity:0}100%{opacity:0}}
+.success-mark svg{width:64px;height:64px;color:var(--ok);stroke-dasharray:60;stroke-dashoffset:60;animation:draw .55s var(--ease) .12s forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+.success-mark.is-red{background:var(--osaka-soft)}
+.success-mark.is-red::before{border-color:var(--osaka)}
+.success-mark.is-red svg{color:var(--osaka)}
+.ticket{
+  background:var(--surface);border-radius:var(--r-xl);box-shadow:var(--sh-2);padding:var(--s6) var(--s7);
+  display:flex;flex-direction:column;gap:var(--s4);min-width:min(560px,100%);position:relative;overflow:hidden;
+}
+.ticket::before{content:"";position:absolute;left:0;top:0;bottom:0;width:6px;background:var(--osaka)}
+.ticket-row{display:flex;align-items:center;justify-content:space-between;gap:var(--s5);padding:12px 0;border-bottom:1px dashed var(--line)}
+.ticket-row:last-child{border-bottom:0}
+.ticket-row .tk-k{font-size:14.5px;color:var(--muted);font-weight:600}
+.ticket-row .tk-v{font-size:19px;color:var(--ink);font-weight:700;text-align:right}
+.code-big{font-family:var(--font-display);font-size:40px;letter-spacing:.06em;color:var(--osaka);font-weight:600}
+
+/* Timeline commande */
+.timeline{display:flex;align-items:flex-start;gap:0;width:100%}
+.tl-step{flex:1;display:flex;flex-direction:column;align-items:center;gap:10px;position:relative;text-align:center}
+.tl-dot{width:44px;height:44px;border-radius:50%;background:var(--cream);color:var(--faint);display:flex;align-items:center;justify-content:center;box-shadow:inset 0 0 0 2px var(--line-strong);z-index:2;transition:all var(--t) var(--ease)}
+.tl-dot svg{width:22px;height:22px}
+.tl-bar{position:absolute;top:21px;left:-50%;width:100%;height:3px;background:var(--line-strong);z-index:1}
+.tl-step:first-child .tl-bar{display:none}
+.tl-step.is-done .tl-dot{background:var(--ok);color:#fff;box-shadow:none}
+.tl-step.is-done .tl-bar{background:var(--ok)}
+.tl-step.is-current .tl-dot{background:var(--osaka);color:#fff;box-shadow:0 0 0 6px var(--osaka-soft)}
+.tl-step.is-current .tl-bar{background:linear-gradient(90deg,var(--ok),var(--osaka))}
+.tl-lbl{font-size:14.5px;font-weight:700;color:var(--ink)}
+.tl-sub{font-size:13px;color:var(--muted)}
+.tl-step:not(.is-done):not(.is-current) .tl-lbl{color:var(--faint)}
+
+/* ---------- 23. RÉSERVATION ---------- */
+.res-head{padding:var(--s5) var(--s7) var(--s4);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:var(--s5);background:rgba(252,250,246,.94)}
+.res-body{flex:1;min-height:0}
+.res-inner{max-width:1180px;margin:0 auto;padding:var(--s7) var(--s7) var(--s8);
+  display:grid;grid-template-columns:minmax(0,1fr) 304px;gap:var(--s7);align-items:start}
+.res-inner.is-single{grid-template-columns:minmax(0,1fr);max-width:940px}
+.res-main{display:flex;flex-direction:column;gap:var(--s6);min-width:0}
+.res-side{display:flex;flex-direction:column;gap:var(--s4);position:sticky;top:0}
+.res-side .panel{padding:var(--s5)}
+.side-row{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px dashed var(--line)}
+.side-row:last-child{border-bottom:0}
+.side-row .sr-ico{width:38px;height:38px;border-radius:10px;background:var(--cream);display:flex;align-items:center;justify-content:center;color:var(--ink-2);flex:0 0 auto}
+.side-row .sr-ico svg{width:19px;height:19px}
+.side-row .sr-k{font-size:12.5px;color:var(--muted);font-weight:700;letter-spacing:.05em;text-transform:uppercase}
+.side-row .sr-v{font-size:16px;color:var(--ink);font-weight:700}
+.side-row.is-todo .sr-v{color:var(--faint);font-weight:600}
+@media (max-width:1080px){.res-inner{grid-template-columns:minmax(0,1fr)}.res-side{display:none}}
+.res-foot{flex:0 0 auto;padding:var(--s5) var(--s7);border-top:1px solid var(--line);background:var(--surface);display:flex;align-items:center;justify-content:space-between;gap:var(--s4)}
+
+.pick-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--s4)}
+.pick-grid-6{grid-template-columns:repeat(6,1fr)}
+@media (max-width:820px){.pick-grid-6{grid-template-columns:repeat(3,1fr)}}
+.pick{
+  min-height:104px;border-radius:var(--r-lg);background:var(--surface);box-shadow:inset 0 0 0 1.5px var(--line),var(--sh-1);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;
+  transition:all var(--t) var(--ease);
+}
+.pick b{font-size:34px;font-weight:700;color:var(--ink);line-height:1;font-family:var(--font-display)}
+.pick span{font-size:14px;color:var(--muted);font-weight:600}
+@media (hover:hover){.pick:hover{box-shadow:inset 0 0 0 1.5px var(--line-strong),var(--sh-2);transform:translateY(-2px)}}
+.pick:active{transform:scale(.98)}
+.pick[aria-pressed="true"]{background:var(--osaka);box-shadow:var(--sh-red)}
+.pick[aria-pressed="true"] b,.pick[aria-pressed="true"] span{color:#fff}
+.pick-wide{grid-column:span 2;flex-direction:row;gap:12px}
+.pick-wide b{font-size:24px}
+
+/* Choix maintenant / plus tard */
+.big-choice{display:grid;grid-template-columns:1fr 1fr;gap:var(--s5)}
+.bc{
+  padding:var(--s6);border-radius:var(--r-xl);background:var(--surface);box-shadow:var(--sh-2);text-align:left;
+  display:flex;flex-direction:column;gap:var(--s3);min-height:210px;transition:all var(--t) var(--ease);position:relative;
+}
+.bc-ico{width:58px;height:58px;border-radius:var(--r-md);background:var(--cream);display:flex;align-items:center;justify-content:center;color:var(--ink)}
+.bc-ico svg{width:28px;height:28px}
+.bc b{font-size:23px;color:var(--ink);font-weight:700}
+.bc p{font-size:15.5px;color:var(--muted);line-height:1.4;margin:0}
+.bc-status{margin-top:auto;display:inline-flex;align-items:center;gap:8px;font-size:14.5px;font-weight:700;padding:9px 14px;border-radius:99px;background:var(--ok-soft);color:var(--ok);align-self:flex-start}
+.bc-status.is-wait{background:var(--warn-soft);color:var(--warn)}
+.bc-status.is-full{background:var(--danger-soft);color:var(--danger)}
+@media (hover:hover){.bc:hover{transform:translateY(-3px);box-shadow:var(--sh-3)}}
+.bc[aria-pressed="true"]{box-shadow:inset 0 0 0 2.5px var(--osaka),var(--sh-2)}
+
+/* Dates rapides */
+.date-quick{display:flex;gap:var(--s3);flex-wrap:wrap}
+.dq{
+  min-width:126px;min-height:92px;padding:14px var(--s4);border-radius:var(--r-lg);background:var(--surface);
+  box-shadow:inset 0 0 0 1.5px var(--line),var(--sh-1);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  transition:all var(--t) var(--ease);
+}
+.dq small{font-size:13.5px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.dq b{font-size:26px;color:var(--ink);font-weight:700;line-height:1.1}
+.dq span{font-size:13px;color:var(--faint)}
+@media (hover:hover){.dq:hover{transform:translateY(-2px);box-shadow:inset 0 0 0 1.5px var(--line-strong),var(--sh-2)}}
+.dq[aria-pressed="true"]{background:var(--ink);box-shadow:var(--sh-2)}
+.dq[aria-pressed="true"] b{color:#fff}
+.dq[aria-pressed="true"] small,.dq[aria-pressed="true"] span{color:rgba(255,255,255,.65)}
+
+/* Calendrier */
+.cal{background:var(--surface);border-radius:var(--r-xl);box-shadow:var(--sh-2);padding:var(--s5);max-width:520px}
+.cal-head{display:flex;align-items:center;justify-content:space-between;gap:var(--s4);margin-bottom:var(--s4)}
+.cal-month{font-size:19px;font-weight:700;color:var(--ink);text-transform:capitalize}
+.cal-dow{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:6px}
+.cal-dow span{text-align:center;font-size:12.5px;font-weight:800;color:var(--faint);text-transform:uppercase;letter-spacing:.06em}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.cal-day{
+  height:58px;border-radius:var(--r-sm);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  font-size:17px;font-weight:600;color:var(--ink);transition:all var(--t-fast) var(--ease);
+}
+@media (hover:hover){.cal-day:not([disabled]):hover{background:var(--cream)}}
+.cal-day[disabled]{color:var(--faint);opacity:.5;pointer-events:none}
+.cal-day.is-today{box-shadow:inset 0 0 0 1.5px var(--line-strong)}
+.cal-day[aria-pressed="true"]{background:var(--osaka);color:#fff;box-shadow:var(--sh-red)}
+.cal-day i{width:5px;height:5px;border-radius:50%;background:var(--osaka);display:block}
+.cal-day[aria-pressed="true"] i{background:#fff}
+.cal-empty{height:58px}
+
+/* Horaires */
+.slot-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:var(--s3)}
+.slot{
+  min-height:82px;border-radius:var(--r-md);background:var(--surface);box-shadow:inset 0 0 0 1.5px var(--line),var(--sh-1);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;transition:all var(--t) var(--ease);
+}
+.slot b{font-size:23px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+.slot small{font-size:12.5px;font-weight:700;color:var(--ok)}
+@media (hover:hover){.slot:not([disabled]):hover{transform:translateY(-2px);box-shadow:inset 0 0 0 1.5px var(--line-strong),var(--sh-2)}}
+.slot.is-tight small{color:var(--warn)}
+.slot[disabled]{background:var(--cream);box-shadow:none;pointer-events:none}
+.slot[disabled] b{color:var(--faint);text-decoration:line-through;text-decoration-thickness:1.5px}
+.slot[disabled] small{color:var(--faint)}
+.slot[aria-pressed="true"]{background:var(--osaka);box-shadow:var(--sh-red)}
+.slot[aria-pressed="true"] b{color:#fff}
+.slot[aria-pressed="true"] small{color:rgba(255,255,255,.85)}
+.service-tabs{display:inline-flex;background:var(--cream);padding:5px;border-radius:var(--r-pill);gap:5px}
+
+/* Récap réservation */
+.recap{background:var(--surface);border-radius:var(--r-xl);box-shadow:var(--sh-2);overflow:hidden}
+.recap-head{padding:var(--s5) var(--s6);background:var(--ink);color:#fff;display:flex;align-items:center;gap:14px}
+.recap-row{display:flex;align-items:center;gap:var(--s4);padding:var(--s4) var(--s6);border-bottom:1px solid var(--line)}
+.recap-row:last-child{border-bottom:0}
+.recap-ico{width:44px;height:44px;border-radius:var(--r-sm);background:var(--cream);display:flex;align-items:center;justify-content:center;color:var(--ink-2);flex:0 0 auto}
+.recap-ico svg{width:22px;height:22px}
+.recap-k{font-size:13.5px;color:var(--muted);font-weight:600}
+.recap-v{font-size:18px;color:var(--ink);font-weight:700}
+
+/* Clavier numérique tactile */
+.keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;width:312px;flex:0 0 312px}
+@media (max-width:900px){.keypad{width:100%;flex:1 1 auto;max-width:360px}}
+.key{
+  height:74px;border-radius:var(--r-md);background:var(--surface);box-shadow:inset 0 0 0 1.5px var(--line),var(--sh-1);
+  font-size:27px;font-weight:700;color:var(--ink);display:flex;align-items:center;justify-content:center;
+  transition:all var(--t-fast) var(--ease);
+}
+@media (hover:hover){.key:hover{background:var(--cream)}}
+.key:active{transform:scale(.95);background:var(--sand)}
+.key-fn{background:var(--cream);box-shadow:none;color:var(--ink-2)}
+.key svg{width:26px;height:26px}
+.phone-display{
+  min-height:80px;border-radius:var(--r-lg);background:var(--surface);box-shadow:inset 0 0 0 1.5px var(--line-strong);
+  display:flex;align-items:center;padding:0 var(--s6);font-size:30px;font-weight:700;letter-spacing:.08em;color:var(--ink);
+  font-variant-numeric:tabular-nums;
+}
+.phone-display.is-empty{color:var(--faint);font-weight:500;letter-spacing:normal;font-size:21px}
+.caret{display:inline-block;width:2px;height:30px;background:var(--osaka);margin-left:3px;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+
+/* ---------- 24. DEMO PANEL ---------- */
+.demo-chip{
+  height:52px;padding:0 18px;border-radius:var(--r-pill);font-size:14.5px;font-weight:700;color:var(--muted);
+  display:inline-flex;align-items:center;gap:9px;box-shadow:inset 0 0 0 1.5px var(--line-strong);
+}
+.demo-chip svg{width:19px;height:19px}
+@media (hover:hover){.demo-chip:hover{background:var(--cream);color:var(--ink)}}
+@media (max-width:1180px){.demo-chip span{display:none}.demo-chip{padding:0 16px}}
+.demo-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.demo-item{
+  display:flex;align-items:center;gap:12px;min-height:62px;padding:12px var(--s4);border-radius:var(--r-md);
+  background:var(--surface);box-shadow:inset 0 0 0 1.5px var(--line);text-align:left;font-size:15.5px;font-weight:600;color:var(--ink);
+  transition:all var(--t) var(--ease);
+}
+@media (hover:hover){.demo-item:hover{background:var(--cream)}}
+.demo-item:active{transform:scale(.98)}
+.demo-item i{width:34px;height:34px;border-radius:9px;background:var(--cream);display:flex;align-items:center;justify-content:center;color:var(--osaka);flex:0 0 auto}
+.demo-item i svg{width:19px;height:19px}
+
+/* ---------- 25. DESIGN SYSTEM ---------- */
+.ds-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:var(--s4)}
+.swatch{border-radius:var(--r-md);overflow:hidden;box-shadow:var(--sh-1);background:var(--surface)}
+.swatch-c{height:88px}
+.swatch-m{padding:12px 14px;display:flex;flex-direction:column;gap:2px}
+.swatch-m b{font-size:14.5px;color:var(--ink)}
+.swatch-m span{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.ds-section{padding:var(--s7) 0;border-bottom:1px solid var(--line)}
+.ds-section:last-child{border-bottom:0}
+.ds-row{display:flex;flex-wrap:wrap;gap:var(--s4);align-items:center}
+.ds-label{font-size:12.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin-bottom:var(--s3)}
+.ds-box{background:var(--surface);border-radius:var(--r-lg);padding:var(--s5);box-shadow:var(--sh-1)}
+.spec-line{display:flex;align-items:center;gap:var(--s4);padding:10px 0;border-bottom:1px dashed var(--line)}
+.spec-line:last-child{border-bottom:0}
+.spec-line code{font-size:13.5px;background:var(--cream);padding:4px 9px;border-radius:6px;color:var(--osaka-ink);font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.ds-bar{height:22px;background:var(--osaka-tint);border-radius:4px}
+
+/* ---------- 26. UTILITAIRES ---------- */
+.stack{display:flex;flex-direction:column}
+.row{display:flex;align-items:center}
+.gap1{gap:var(--s1)}.gap2{gap:var(--s2)}.gap3{gap:var(--s3)}.gap4{gap:var(--s4)}
+.gap5{gap:var(--s5)}.gap6{gap:var(--s6)}.gap7{gap:var(--s7)}
+.mt2{margin-top:var(--s2)}.mt3{margin-top:var(--s3)}.mt4{margin-top:var(--s4)}
+.mt5{margin-top:var(--s5)}.mt6{margin-top:var(--s6)}.mt7{margin-top:var(--s7)}
+.grow{flex:1;min-width:0}
+.wrapf{flex-wrap:wrap}
+.between{justify-content:space-between}
+.acenter{align-items:center}
+.hide{display:none!important}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ---------- 27. RESPONSIVE ---------- */
+/* Écran un peu plus étroit : panier plus compact */
+@media (max-width:1280px){
+  :root{--col-cat:212px;--col-cart:330px}
+  .home-name{font-size:52px}
+}
+/* Portrait / petit écran : le panier devient un tiroir */
+@media (max-width:1080px){
+  .menu-layout{grid-template-columns:var(--col-cat) minmax(0,1fr)}
+  .cart{position:absolute;top:0;right:0;bottom:0;width:min(420px,86%);z-index:65;transform:translateX(101%);
+        transition:transform var(--t-slow) var(--ease);box-shadow:var(--sh-4)}
+  .cart.is-open{transform:none}
+  .cart-scrim{position:absolute;inset:0;background:rgba(30,22,14,.42);z-index:64;animation:fade var(--t) var(--ease)}
+  .home{grid-template-columns:1fr}
+  .home-right{display:none}
+  .home-left{padding:var(--s7) var(--s6)}
+  .big-choice{grid-template-columns:1fr}
+  .cart-fab{display:flex!important}
+  .cart-fab-close{display:inline-flex!important}
+}
+@media (min-width:1081px){
+  .cart-fab{display:none!important}
+  .cart-scrim{display:none}
+}
+.cart-fab{
+  position:absolute;right:20px;bottom:20px;z-index:55;height:66px;padding:0 24px;border-radius:99px;
+  background:var(--osaka);color:#fff;font-size:17px;font-weight:700;align-items:center;gap:14px;box-shadow:var(--sh-red);
+}
+.cart-fab svg{width:24px;height:24px}
+.cart-fab .cf-count{min-width:30px;height:30px;border-radius:99px;background:rgba(255,255,255,.22);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800}
+
+@media (max-width:820px){
+  :root{--topbar:70px}
+  .nav-item{min-width:0;padding:0 var(--s4)}
+  .nav-item span{display:none}
+  .cats{position:static}
+  .menu-layout{grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr)}
+  .cats{border-right:0;border-bottom:1px solid var(--line)}
+  .cats-head{display:none}
+  .cats-list{flex-direction:row;overflow-x:auto;padding:var(--s3);gap:8px}
+  .cat{min-height:var(--tap);white-space:nowrap;flex:0 0 auto}
+  .cat-count{display:none}
+  .pick-grid{grid-template-columns:repeat(3,1fr)}
+  .wrap{padding:var(--s6) var(--s5) var(--s8)}
+}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
+</style>
+</head>
+<body>
+<div id="device">
+  <header id="topbar" class="topbar"></header>
+  <main id="screen"></main>
+  <div id="layers"></div>
+  <div id="toasts" aria-live="polite"></div>
+</div>
+
+<script>
+/* ==========================================================================
+   OSAKA — Prototype fonctionnel
+   Vanilla JS. Aucune dépendance externe.
+   ========================================================================== */
+(function(){
+"use strict";
+
+/* ---------- ICÔNES (trait 1.9, 24×24, cohérentes) ---------- */
+const ICONS={
+home:'<path d="M3.5 10.8 12 3.6l8.5 7.2"/><path d="M6 9.6V20h12V9.6"/><path d="M10 20v-5h4v5"/>',
+book:'<path d="M4 5.6A2.6 2.6 0 0 1 6.6 3H20v14.4H6.6A2.6 2.6 0 0 0 4 20V5.6Z"/><path d="M8 8h8M8 11.6h5.5"/>',
+bag:'<path d="M5.6 8h12.8l1 12.2H4.6L5.6 8Z"/><path d="M9 8V6.2a3 3 0 0 1 6 0V8"/>',
+calendar:'<rect x="3.6" y="5.4" width="16.8" height="15" rx="2.4"/><path d="M3.6 10h16.8M8.4 3.2v4M15.6 3.2v4"/>',
+help:'<circle cx="12" cy="12" r="9"/><path d="M9.6 9.6a2.5 2.5 0 1 1 3.3 2.4c-.6.2-.9.8-.9 1.4v.5"/><path d="M12 17.1v.01"/>',
+plus:'<path d="M12 5.2v13.6M5.2 12h13.6"/>',
+minus:'<path d="M5.2 12h13.6"/>',
+trash:'<path d="M4.2 6.8h15.6M9.2 6.8V4.6h5.6v2.2"/><path d="M6.6 6.8 7.6 20h8.8l1-13.2"/><path d="M10.2 10.6v5.8M13.8 10.6v5.8"/>',
+pencil:'<path d="m4 20 1.1-4.1L15.9 5.1l3 3L8.1 18.9 4 20Z"/><path d="m14 7 3 3"/>',
+check:'<path d="m4.8 12.6 4.8 4.8L19.4 7.2"/>',
+chevR:'<path d="m9.2 5.2 7 6.8-7 6.8"/>',
+chevL:'<path d="M14.8 5.2 7.8 12l7 6.8"/>',
+chevD:'<path d="m5.4 9 6.6 6.4L18.6 9"/>',
+arrR:'<path d="M4 12h15M13.2 6l6 6-6 6"/>',
+arrL:'<path d="M20 12H5M10.8 6l-6 6 6 6"/>',
+x:'<path d="m6.4 6.4 11.2 11.2M17.6 6.4 6.4 17.6"/>',
+search:'<circle cx="11" cy="11" r="7"/><path d="m16.2 16.2 4.4 4.4"/>',
+filter:'<path d="M4.2 6.4h15.6M7 12h10M10 17.6h4"/>',
+star:'<path fill="currentColor" stroke="none" d="m12 3.4 2.7 5.5 6 .9-4.3 4.2 1 6-5.4-2.8-5.4 2.8 1-6-4.3-4.2 6-.9L12 3.4Z"/>',
+clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7.2V12l3.4 2"/>',
+users:'<circle cx="9.2" cy="8" r="3.6"/><path d="M3 20c0-3.4 2.8-6.2 6.2-6.2S15.4 16.6 15.4 20"/><path d="M16.4 5.2a3.4 3.4 0 0 1 0 6.6M17.2 14.2c2.4.6 4 2.7 4 5.8"/>',
+phone:'<path d="M5.4 3.6h3.2l1.6 4-2.1 1.6a12.4 12.4 0 0 0 6.1 6.1l1.6-2.1 4 1.6v3.2c0 1-.9 1.9-1.9 1.8C10.2 19.4 4.6 13.8 3.6 5.5c-.1-1 .8-1.9 1.8-1.9Z"/>',
+note:'<path d="M4 5.4h16v10.4H9.2L4 20V5.4Z"/><path d="M8 9.4h8M8 12.4h5"/>',
+info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.6v.01"/>',
+alert:'<path d="M12 4.2 2.8 20h18.4L12 4.2Z"/><path d="M12 10.2v4.4M12 17.4v.01"/>',
+alertC:'<circle cx="12" cy="12" r="9"/><path d="M12 7.4v5.8M12 16.4v.01"/>',
+wifiOff:'<path d="m3 3 18 18"/><path d="M9 15.6a4.6 4.6 0 0 1 4.8-1"/><path d="M5.8 12.2a9.4 9.4 0 0 1 2.9-1.9M2.6 8.8a14 14 0 0 1 4.2-2.4"/><path d="M21.4 8.8a14 14 0 0 0-6.2-3.1M18.4 12.2a9.4 9.4 0 0 0-2.2-1.6"/><path d="M12 19.4v.01"/>',
+refresh:'<path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20.4 4v4.4H16"/>',
+sparkles:'<path d="m11.4 4 1.8 4.6 4.6 1.8-4.6 1.8-1.8 4.6-1.8-4.6L5 10.4l4.6-1.8L11.4 4Z"/><path d="m18.4 15.2.9 2.2 2.2.9-2.2.9-.9 2.2-.9-2.2-2.2-.9 2.2-.9.9-2.2Z"/>',
+flame:'<path d="M12 3.2s5 4 5 8.6a5 5 0 0 1-10 0c0-1.8.9-3.1 1.8-4 .3 1.5 1.3 2.2 2.1 2.2 1 0 1.5-.9 1.5-2.2 0-1.8-.4-3.4-.4-4.6Z"/>',
+leaf:'<path d="M20.4 3.6C10 3.6 3.6 8.4 3.6 15.2a5.2 5.2 0 0 0 5.2 5.2c6.8 0 11.6-6.4 11.6-16.8Z"/><path d="M8.8 20.4c1.6-5.4 4.8-9 8.4-11.2"/>',
+chef:'<path d="M7 20h10v-3.2H7V20Z"/><path d="M7 16.8a3.6 3.6 0 0 1-1-7 4 4 0 0 1 6-4.4 4 4 0 0 1 6 4.4 3.6 3.6 0 0 1-1 7"/>',
+noGluten:'<circle cx="12" cy="12" r="9"/><path d="M5.8 18.2 18.2 5.8"/>',
+utensils:'<path d="M6.4 3.2v6.4a2.2 2.2 0 0 0 4.4 0V3.2"/><path d="M8.6 9.8V20.8"/><path d="M17.4 3.2c-1.6 1.6-2.2 3.2-2.2 5.2s.6 3.2 2.2 3.2v9.2"/>',
+send:'<path d="m4 12 16.4-7.2L14 21.2l-2.6-6.6L4 12Z"/>',
+receipt:'<path d="M6 3.4h12v17.2l-3-1.8-3 1.8-3-1.8-3 1.8V3.4Z"/><path d="M9 8h6M9 12h6"/>',
+shield:'<path d="m12 3.2 7.2 3v5.6c0 4.6-3.1 7.9-7.2 9.6-4.1-1.7-7.2-5-7.2-9.6V6.2l7.2-3Z"/><path d="m9.4 12 1.8 1.8 3.4-3.6"/>',
+bell:'<path d="M6.6 10.4a5.4 5.4 0 0 1 10.8 0c0 4 1.6 5.6 1.6 5.6H5s1.6-1.6 1.6-5.6Z"/><path d="M10 19a2 2 0 0 0 4 0"/>',
+pin:'<path d="M12 21s7-6.4 7-11.4a7 7 0 1 0-14 0C5 14.6 12 21 12 21Z"/><circle cx="12" cy="9.6" r="2.6"/>',
+access:'<circle cx="12.4" cy="4.6" r="1.8"/><path d="M10 8.4v4.8h4.6l2.4 6"/><path d="M9.6 11.8a5.2 5.2 0 1 0 6.2 7.4"/>',
+grid:'<rect x="3.6" y="3.6" width="7.2" height="7.2" rx="1.8"/><rect x="13.2" y="3.6" width="7.2" height="7.2" rx="1.8"/><rect x="3.6" y="13.2" width="7.2" height="7.2" rx="1.8"/><rect x="13.2" y="13.2" width="7.2" height="7.2" rx="1.8"/>',
+list:'<path d="M4.4 6.4h15.2M4.4 12h15.2M4.4 17.6h15.2"/>',
+user:'<circle cx="12" cy="8" r="4"/><path d="M4.6 20.4c.9-3.7 3.9-6 7.4-6s6.5 2.3 7.4 6"/>',
+mail:'<rect x="3.2" y="5.4" width="17.6" height="13.2" rx="2.2"/><path d="m3.6 7 8.4 5.6L20.4 7"/>',
+hourglass:'<path d="M7 3.6h10v2.8c0 2.6-5 3.6-5 5.6s5 3 5 5.6v2.8H7v-2.8c0-2.6 5-3.6 5-5.6S7 9 7 6.4V3.6Z"/>',
+soup:'<path d="M3.8 11.2h16.4a8.2 8.2 0 0 1-8.2 8.2 8.2 8.2 0 0 1-8.2-8.2Z"/><path d="M9 8.4c0-1.6-1.6-1.6-1.6-3.2M13 8.4c0-1.6-1.6-1.6-1.6-3.2M17 8.4c0-1.6-1.6-1.6-1.6-3.2"/>',
+sushi:'<circle cx="12" cy="12" r="8.4"/><circle cx="12" cy="12" r="3.4"/>',
+fish:'<path d="M3.4 12c3-4.4 6.6-6.6 10.6-6.6 3.4 0 5.6 2.6 6.6 6.6-1 4-3.2 6.6-6.6 6.6-4 0-7.6-2.2-10.6-6.6Z"/><path d="M16.6 11.4v.01"/>',
+cup:'<path d="M5.4 6.4h11v7.2a5.6 5.6 0 0 1-11.2 0V6.4h.2Z"/><path d="M16.4 8.4h1.8a2.6 2.6 0 0 1 0 5.2h-1.8"/><path d="M4 20.4h14"/>',
+bottle:'<path d="M10 3.2h4v3.4l2 3.2v11.2H8V9.8l2-3.2V3.2Z"/><path d="M8 13.6h8"/>',
+rice:'<path d="M4.4 13.6h15.2a7.6 7.6 0 0 1-15.2 0Z"/><path d="M7.6 10.4c1.6-2.6 7.2-2.6 8.8 0"/>',
+cake:'<path d="M4.4 20.4V12h15.2v8.4"/><path d="M3.2 20.4h17.6"/><path d="M8 12V8.8M12 12V8M16 12v-3.2"/><path d="M4.4 15.6c2 1.6 3.4 1.6 5.4 0s3.4-1.6 5.4 0 3.4 1.6 4.4.6"/>',
+box:'<path d="M3.6 7.4 12 3.4l8.4 4v9.2L12 20.6l-8.4-4V7.4Z"/><path d="M3.6 7.4 12 11.6l8.4-4.2M12 11.6v9"/>',
+login:'<path d="M14.4 3.6h4a2 2 0 0 1 2 2v12.8a2 2 0 0 1-2 2h-4"/><path d="M9.6 8 13.6 12l-4 4M13.2 12H3.6"/>',
+eye:'<path d="M2.6 12S6.2 5.8 12 5.8 21.4 12 21.4 12 17.8 18.2 12 18.2 2.6 12 2.6 12Z"/><circle cx="12" cy="12" r="3"/>',
+sun:'<circle cx="12" cy="12" r="4.4"/><path d="M12 2.6v2.4M12 19v2.4M2.6 12H5M19 12h2.4M5.4 5.4l1.7 1.7M16.9 16.9l1.7 1.7M18.6 5.4l-1.7 1.7M7.1 16.9l-1.7 1.7"/>',
+moon:'<path d="M20 14.2A8.4 8.4 0 0 1 9.8 4 8.6 8.6 0 1 0 20 14.2Z"/>',
+sliders:'<path d="M4 8h10M18 8h2M4 16h4M12 16h8"/><circle cx="16" cy="8" r="2.2"/><circle cx="10" cy="16" r="2.2"/>',
+palette:'<path d="M12 3.4a8.6 8.6 0 0 0 0 17.2c1.4 0 2-1 2-1.8s-.6-1.4-.6-2.2c0-.8.7-1.4 1.6-1.4h1.6a4 4 0 0 0 4-4c0-4.4-4-7.8-8.6-7.8Z"/><circle cx="8.4" cy="10.4" r="1"/><circle cx="12" cy="7.8" r="1"/><circle cx="15.8" cy="10" r="1"/>',
+minusC:'<circle cx="12" cy="12" r="9"/><path d="M8.4 12h7.2"/>',
+checkC:'<circle cx="12" cy="12" r="9"/><path d="m8.2 12.2 2.6 2.6 5-5.2"/>',
+timer:'<circle cx="12" cy="13.4" r="7.6"/><path d="M12 9.6v3.8l2.6 1.6M9.4 2.8h5.2"/>',
+lock:'<rect x="4.6" y="10.4" width="14.8" height="10" rx="2.4"/><path d="M8.2 10.4V7.8a3.8 3.8 0 0 1 7.6 0v2.6"/>',
+edit:'<path d="M11 4.6H5.6a2 2 0 0 0-2 2v11.8a2 2 0 0 0 2 2h11.8a2 2 0 0 0 2-2V13"/><path d="m17.4 3.6 3 3-8.4 8.4-3.6.6.6-3.6 8.4-8.4Z"/>'
+};
+function ic(n,extra){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"'+(extra?' class="'+extra+'"':'')+'>'+(ICONS[n]||'')+'</svg>';}
+
+/* ---------- ILLUSTRATIONS CULINAIRES (SVG, ratio 4:3 homogène) ----------
+   Aucune image bitmap : compositions vectorielles cohérentes, même cadrage,
+   même cercle solaire en fond, mêmes ombres. */
+function A(inner,c1,c2){
+  return '<svg class="dish-art" viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">'
+    +'<rect width="400" height="300" fill="'+c1+'"/>'
+    +'<circle cx="214" cy="122" r="106" fill="'+c2+'"/>'
+    +inner+'</svg>';
+}
+const steam='<g stroke="rgba(255,255,255,.55)" stroke-width="5" stroke-linecap="round" fill="none">'
+  +'<path d="M168 66c-9 11 9 19 0 30"/><path d="M204 56c-9 12 9 20 0 32"/><path d="M240 66c-9 11 9 19 0 30"/></g>';
+
+const ART={
+  ramen:function(){return A(
+    '<ellipse cx="200" cy="246" rx="136" ry="20" fill="rgba(60,40,20,.10)"/>'
+    +steam
+    +'<path d="M66 152h268c0 62-60 96-134 96S66 214 66 152Z" fill="#2C2D33"/>'
+    +'<path d="M66 152h268a134 134 0 0 1-1.6 14H67.6a134 134 0 0 1-1.6-14Z" fill="#C0362D"/>'
+    +'<ellipse cx="200" cy="152" rx="134" ry="34" fill="#3B3C43"/>'
+    +'<ellipse cx="200" cy="154" rx="118" ry="28" fill="#B4762F"/>'
+    +'<g stroke="#F2DCA8" stroke-width="7" fill="none" stroke-linecap="round">'
+    +'<path d="M120 154c16-13 44-15 62-5"/><path d="M132 164c16-13 44-15 62-5"/><path d="M112 146c14-12 38-14 54-6"/></g>'
+    +'<path d="M150 122l34 7v36l-34-7Z" fill="#1E2A25"/>'
+    +'<g><ellipse cx="246" cy="150" rx="27" ry="17" fill="#FCF6EA"/><ellipse cx="246" cy="150" rx="13" ry="8.5" fill="#E7A33C"/></g>'
+    +'<g><ellipse cx="176" cy="160" rx="24" ry="14" fill="#CB8F62"/><ellipse cx="176" cy="160" rx="13" ry="7" fill="#A96E45"/></g>'
+    +'<g fill="#5F9250"><circle cx="216" cy="140" r="5"/><circle cx="232" cy="168" r="4.5"/><circle cx="200" cy="170" r="4"/><circle cx="262" cy="164" r="4.5"/></g>'
+    ,'#F2E5D2','#E8D4B6');},
+
+  nigiri:function(v){var FISH=[['#E8875C','#F6C0A2'],['#E36A5E','#F7B3A6'],['#EFA45E','#FAD3A6'],['#D9605C','#F3AFA6'],['#E9B06A','#FBDDB4'],['#C9705E','#EEB6A4']];
+    var f0=FISH[(v||0)%6],f1=FISH[((v||0)+2)%6],f2c=FISH[((v||0)+4)%6];
+    var p=function(x,y,f,f2){return '<g transform="translate('+x+','+y+')">'
+      +'<ellipse cx="0" cy="40" rx="52" ry="11" fill="rgba(60,40,20,.10)"/>'
+      +'<rect x="-44" y="4" width="88" height="34" rx="16" fill="#FCF7ED"/>'
+      +'<rect x="-48" y="-24" width="96" height="34" rx="15" fill="'+f+'"/>'
+      +'<path d="M-40-16h80" stroke="'+f2+'" stroke-width="6" stroke-linecap="round"/>'
+      +'<path d="M-40-6h64" stroke="rgba(255,255,255,.38)" stroke-width="4" stroke-linecap="round"/></g>';};
+    return A('<ellipse cx="200" cy="212" rx="164" ry="42" fill="#F7F1E6"/>'
+      +'<ellipse cx="200" cy="212" rx="164" ry="42" fill="none" stroke="#E7DCC9" stroke-width="2"/>'
+      +p(104,168,f0[0],f0[1])+p(200,150,f1[0],f1[1])+p(296,168,f2c[0],f2c[1])
+      ,'#F1EAE0','#E4D8C6');},
+
+  maki:function(v){var FILL=['#E8875C','#5F9250','#E36A5E','#E9B06A','#8FA85C','#D9605C'];
+    var g0=FILL[(v||0)%6],g1=FILL[((v||0)+3)%6],g2=FILL[((v||0)+5)%6];
+    var m=function(x,y,r,fill,seed){return '<g transform="translate('+x+','+y+')">'
+      +'<ellipse cx="0" cy="'+(r+6)+'" rx="'+r+'" ry="9" fill="rgba(60,40,20,.10)"/>'
+      +'<circle r="'+r+'" fill="#1F2B25"/><circle r="'+(r-7)+'" fill="#FBF5E9"/>'
+      +'<circle r="'+(r*0.42)+'" fill="'+fill+'"/>'
+      +'<g fill="#EDE0C6">'+seed+'</g></g>';};
+    var sd='<circle cx="-14" cy="8" r="2.4"/><circle cx="12" cy="-10" r="2.4"/><circle cx="4" cy="16" r="2.2"/>';
+    return A('<ellipse cx="200" cy="196" rx="158" ry="40" fill="#F7F1E6"/>'
+      +m(118,164,42,g0,sd)+m(200,148,46,g1,sd)+m(282,164,42,g2,sd)
+      +'<path d="M300 96c14 6 22 16 24 30" stroke="#5F9250" stroke-width="6" fill="none" stroke-linecap="round"/>'
+      ,'#F0E9DE','#E2D6C3');},
+
+  california:function(){var m=function(x,y,r){return '<g transform="translate('+x+','+y+')">'
+      +'<ellipse cx="0" cy="'+(r+6)+'" rx="'+r+'" ry="9" fill="rgba(60,40,20,.10)"/>'
+      +'<circle r="'+r+'" fill="#FBF5E9"/>'
+      +'<circle r="'+r+'" fill="none" stroke="#E9903F" stroke-width="5" stroke-dasharray="2 6" stroke-linecap="round"/>'
+      +'<circle r="'+(r-9)+'" fill="#22302A"/><circle r="'+(r-16)+'" fill="#FBF5E9"/>'
+      +'<path d="M-8-6a10 10 0 0 1 16 6" stroke="#6FA05A" stroke-width="7" fill="none" stroke-linecap="round"/>'
+      +'<circle cx="4" cy="8" r="6" fill="#E8875C"/></g>';};
+    return A('<ellipse cx="200" cy="198" rx="158" ry="40" fill="#F7F1E6"/>'
+      +m(120,166,42)+m(200,150,46)+m(280,166,42)
+      ,'#F1E8DC','#E5D9C4');},
+
+  gyoza:function(){var g=function(x,y,rot){return '<g transform="translate('+x+','+y+') rotate('+rot+')">'
+      +'<ellipse cx="0" cy="30" rx="52" ry="10" fill="rgba(60,40,20,.10)"/>'
+      +'<path d="M-52 12c0-30 22-46 52-46s52 16 52 46c-16 10-33 15-52 15s-36-5-52-15Z" fill="#F3E2C2"/>'
+      +'<path d="M-52 12c0-30 22-46 52-46s52 16 52 46" fill="none" stroke="#DCC49B" stroke-width="3"/>'
+      +'<g stroke="#D9BF93" stroke-width="4" stroke-linecap="round">'
+      +'<path d="M-34-16v20"/><path d="M-12-24v26"/><path d="M12-24v26"/><path d="M34-16v20"/></g>'
+      +'<path d="M-46 14c14 8 30 12 46 12s32-4 46-12" fill="none" stroke="#C79B5E" stroke-width="4"/></g>';};
+    return A('<ellipse cx="200" cy="214" rx="160" ry="40" fill="#EFE7DA"/>'
+      +g(120,178,-4)+g(238,178,5)+g(180,132,1)
+      +'<circle cx="326" cy="216" r="26" fill="#3A2C22"/><ellipse cx="326" cy="212" rx="20" ry="8" fill="#241A14"/>'
+      ,'#F2E9DB','#E6D6BC');},
+
+  tempura:function(){var t=function(x,y,s,rot){return '<g transform="translate('+x+','+y+') rotate('+rot+') scale('+s+')">'
+      +'<path d="M-46-16c6-14 20-20 40-18 22 2 40 10 48 24 6 12-4 24-22 26-24 3-50-2-62-12-8-6-9-14-4-20Z" fill="#E7B565"/>'
+      +'<path d="M-40-12c8-9 22-12 38-10 18 2 32 9 38 18" fill="none" stroke="#F2D19A" stroke-width="5" stroke-linecap="round"/>'
+      +'<g fill="#D69B47"><circle cx="-16" cy="6" r="4"/><circle cx="14" cy="12" r="3.4"/><circle cx="34" cy="2" r="3"/></g></g>';};
+    return A('<ellipse cx="200" cy="216" rx="158" ry="38" fill="#F6F0E4"/>'
+      +t(150,190,.95,-6)+t(258,186,.9,7)+t(206,140,1,-2)
+      +'<path d="M300 120c-16 4-26 16-28 32" stroke="#6FA05A" stroke-width="9" fill="none" stroke-linecap="round"/>'
+      ,'#F3EADA','#E9D9BD');},
+
+  edamame:function(){var e=function(x,y,rot){return '<g transform="translate('+x+','+y+') rotate('+rot+')">'
+      +'<path d="M-56 0c0-14 12-22 26-22h60c14 0 26 8 26 22s-12 22-26 22h-60C-44 22-56 14-56 0Z" fill="#7BA85B"/>'
+      +'<g fill="#94C070"><circle cx="-28" cy="0" r="13"/><circle cx="4" cy="0" r="13"/><circle cx="36" cy="0" r="13"/></g>'
+      +'<path d="M-56 0c0-14 12-22 26-22" fill="none" stroke="#5E8944" stroke-width="4"/></g>';};
+    return A('<ellipse cx="200" cy="218" rx="150" ry="36" fill="#F5EFE2"/>'
+      +e(190,196,-5)+e(212,158,6)+e(184,120,-2)
+      +'<g fill="#FBF5E9"><circle cx="308" cy="196" r="3"/><circle cx="320" cy="184" r="3"/><circle cx="96" cy="168" r="3"/></g>'
+      ,'#F1EBDC','#DFE3C8');},
+
+  donburi:function(){return A(
+    '<ellipse cx="200" cy="248" rx="132" ry="20" fill="rgba(60,40,20,.10)"/>'+steam
+    +'<path d="M70 154h260c0 60-58 94-130 94S70 214 70 154Z" fill="#F7F1E5"/>'
+    +'<path d="M70 154h260a130 130 0 0 1-1.5 14H71.5A130 130 0 0 1 70 154Z" fill="#C0362D"/>'
+    +'<ellipse cx="200" cy="154" rx="130" ry="32" fill="#EDE4D3"/>'
+    +'<ellipse cx="200" cy="156" rx="114" ry="26" fill="#FCF8EF"/>'
+    +'<g><ellipse cx="168" cy="150" rx="30" ry="16" fill="#C57C4B"/><ellipse cx="168" cy="146" rx="22" ry="10" fill="#A8603A"/></g>'
+    +'<g><ellipse cx="234" cy="156" rx="30" ry="16" fill="#D08C55"/><ellipse cx="234" cy="152" rx="22" ry="10" fill="#B36F3F"/></g>'
+    +'<g fill="#5F9250"><circle cx="200" cy="140" r="5"/><circle cx="262" cy="146" r="4.5"/><circle cx="140" cy="164" r="4.5"/></g>'
+    +'<g fill="#EDE0C6"><circle cx="212" cy="166" r="3"/><circle cx="188" cy="170" r="3"/></g>'
+    ,'#F2E6D4','#E9D6B8');},
+
+  yakitori:function(){var s=function(x,y,rot,c){return '<g transform="translate('+x+','+y+') rotate('+rot+')">'
+      +'<rect x="-6" y="-8" width="120" height="9" rx="4" fill="#C9A87B"/>'
+      +'<g fill="'+c+'"><rect x="-46" y="-24" width="42" height="42" rx="13"/><rect x="2" y="-24" width="42" height="42" rx="13"/><rect x="50" y="-24" width="42" height="42" rx="13"/></g>'
+      +'<g fill="rgba(255,255,255,.22)"><rect x="-40" y="-18" width="30" height="8" rx="4"/><rect x="8" y="-18" width="30" height="8" rx="4"/><rect x="56" y="-18" width="30" height="8" rx="4"/></g></g>';};
+    return A('<ellipse cx="200" cy="222" rx="158" ry="36" fill="#F6F0E4"/>'
+      +s(150,196,-4,'#B4703C')+s(160,150,3,'#C07E43')+s(146,106,-2,'#A9663A')
+      ,'#F1E8D9','#E7D5B9');},
+
+  mochi:function(){var m=function(x,y,r,c){return '<g transform="translate('+x+','+y+')">'
+      +'<ellipse cx="0" cy="'+(r-2)+'" rx="'+(r*0.9)+'" ry="8" fill="rgba(60,40,20,.10)"/>'
+      +'<circle r="'+r+'" fill="'+c+'"/>'
+      +'<circle cx="'+(-r*0.3)+'" cy="'+(-r*0.35)+'" r="'+(r*0.28)+'" fill="rgba(255,255,255,.5)"/></g>';};
+    return A('<rect x="60" y="168" width="280" height="16" rx="8" fill="#2E2A26"/>'
+      +m(130,150,40,'#F6E3E6')+m(212,140,44,'#E9F0DC')+m(292,152,38,'#F7EEDC')
+      ,'#F3ECE2','#EADFD0');},
+
+  dorayaki:function(){return A(
+    '<ellipse cx="200" cy="224" rx="120" ry="20" fill="rgba(60,40,20,.10)"/>'
+    +'<path d="M92 176c0-24 48-40 108-40s108 16 108 40-48 40-108 40S92 200 92 176Z" fill="#D8A45C"/>'
+    +'<path d="M92 168c0-22 48-38 108-38s108 16 108 38-48 38-108 38S92 190 92 168Z" fill="#E3B369"/>'
+    +'<path d="M100 158c14-14 54-24 100-24s86 10 100 24c-14 14-54 24-100 24s-86-10-100-24Z" fill="#3C2A20"/>'
+    +'<path d="M92 148c0-22 48-38 108-38s108 16 108 38-48 38-108 38S92 170 92 148Z" fill="#E9BD74"/>'
+    +'<g fill="rgba(255,255,255,.25)"><ellipse cx="160" cy="136" rx="26" ry="9"/><ellipse cx="238" cy="152" rx="18" ry="6"/></g>'
+    ,'#F3EBDD','#EBDCC0');},
+
+  beer:function(){return A(
+    '<ellipse cx="200" cy="252" rx="86" ry="16" fill="rgba(60,40,20,.10)"/>'
+    +'<path d="M144 92h112l-10 152h-92L144 92Z" fill="#EFC154"/>'
+    +'<path d="M144 92h112l-2 30H146l-2-30Z" fill="#FBF3DF"/>'
+    +'<path d="M146 78c0-14 12-22 26-20 6-10 24-12 32-4 10-8 28-4 32 8 12 0 20 8 18 20-4 6-108 6-108-4Z" fill="#FCF8EE"/>'
+    +'<path d="M256 120h20c14 0 22 12 22 26s-8 26-22 26h-16" fill="none" stroke="#EFC154" stroke-width="12"/>'
+    +'<g fill="rgba(255,255,255,.45)"><circle cx="172" cy="160" r="6"/><circle cx="196" cy="192" r="4.5"/><circle cx="180" cy="216" r="4"/><circle cx="216" cy="150" r="4"/></g>'
+    ,'#F2ECDD','#EEE0BC');},
+
+  sake:function(){return A(
+    '<ellipse cx="200" cy="248" rx="120" ry="18" fill="rgba(60,40,20,.10)"/>'
+    +'<path d="M176 74h48v26c26 14 42 40 42 76 0 40-30 66-66 66s-66-26-66-66c0-36 16-62 42-76V74Z" fill="#F7F2E7"/>'
+    +'<path d="M134 176c0 40 30 66 66 66s66-26 66-66c0-6-.4-12-1.2-17.6H135.2A98 98 0 0 0 134 176Z" fill="#EDE5D4"/>'
+    +'<circle cx="200" cy="186" r="26" fill="#C0362D"/>'
+    +'<path d="M176 74h48" stroke="#D9CDB6" stroke-width="6" stroke-linecap="round"/>'
+    +'<g><path d="M292 196h50v14c0 16-11 26-25 26s-25-10-25-26v-14Z" fill="#FBF6EC"/><ellipse cx="317" cy="196" rx="25" ry="7" fill="#EDE5D4"/></g>'
+    +'<g><path d="M58 206h44v12c0 14-10 23-22 23s-22-9-22-23v-12Z" fill="#FBF6EC"/><ellipse cx="80" cy="206" rx="22" ry="6" fill="#EDE5D4"/></g>'
+    ,'#F1EADC','#E6DAC4');},
+
+  softdrink:function(){return A(
+    '<ellipse cx="200" cy="252" rx="80" ry="16" fill="rgba(60,40,20,.10)"/>'
+    +'<path d="M172 52h56v34l18 34v122a12 12 0 0 1-12 12h-68a12 12 0 0 1-12-12V120l18-34V52Z" fill="#CFE4E6"/>'
+    +'<path d="M154 150h92v92a12 12 0 0 1-12 12h-68a12 12 0 0 1-12-12v-92Z" fill="#9FCBD4"/>'
+    +'<rect x="168" y="44" width="64" height="18" rx="9" fill="#C0362D"/>'
+    +'<rect x="162" y="164" width="76" height="52" rx="10" fill="#FBF6EC" opacity=".85"/>'
+    +'<circle cx="200" cy="190" r="16" fill="none" stroke="#C0362D" stroke-width="5"/>'
+    +'<g fill="rgba(255,255,255,.5)"><circle cx="184" cy="132" r="6"/><circle cx="214" cy="118" r="4.5"/></g>'
+    ,'#EFEDE4','#DFE7DE');},
+
+  tea:function(){return A(
+    '<ellipse cx="196" cy="240" rx="104" ry="18" fill="rgba(60,40,20,.10)"/>'+steam
+    +'<path d="M118 128h158v46c0 40-32 66-79 66s-79-26-79-66v-46Z" fill="#F8F3E9"/>'
+    +'<ellipse cx="197" cy="128" rx="79" ry="20" fill="#EDE6D6"/>'
+    +'<ellipse cx="197" cy="130" rx="66" ry="15" fill="#8FA85C"/>'
+    +'<path d="M276 144h22c16 0 26 12 26 26s-10 26-26 26h-14" fill="none" stroke="#F8F3E9" stroke-width="14"/>'
+    +'<path d="M118 232h158" stroke="#E4DBC8" stroke-width="10" stroke-linecap="round"/>'
+    ,'#F1EEE2','#E4E5CD');},
+
+  bento:function(){return A(
+    '<rect x="52" y="86" width="296" height="150" rx="18" fill="#3A2F27"/>'
+    +'<rect x="62" y="96" width="276" height="130" rx="12" fill="#4A3C31"/>'
+    +'<rect x="72" y="106" width="120" height="110" rx="8" fill="#FCF8EF"/>'
+    +'<g fill="#E8875C"><rect x="86" y="120" width="42" height="30" rx="10"/><rect x="136" y="120" width="42" height="30" rx="10"/></g>'
+    +'<g fill="#5F9250"><circle cx="104" cy="182" r="14"/><circle cx="140" cy="188" r="12"/><circle cx="172" cy="178" r="11"/></g>'
+    +'<rect x="202" y="106" width="126" height="52" rx="8" fill="#E7B565"/>'
+    +'<g fill="#D69B47"><circle cx="228" cy="132" r="9"/><circle cx="262" cy="126" r="8"/><circle cx="296" cy="136" r="8"/></g>'
+    +'<rect x="202" y="166" width="126" height="50" rx="8" fill="#FBF5E9"/>'
+    +'<g fill="#1F2B25"><circle cx="230" cy="191" r="16"/><circle cx="266" cy="191" r="16"/><circle cx="302" cy="191" r="16"/></g>'
+    +'<g fill="#FBF5E9"><circle cx="230" cy="191" r="7"/><circle cx="266" cy="191" r="7"/><circle cx="302" cy="191" r="7"/></g>'
+    ,'#F0E9DD','#E5D8C2');},
+
+  sashimi:function(v){var F=[['#E8875C','#F7C4A8'],['#E36A5E','#F8B5A8'],['#EFA45E','#FAD9AF'],['#D9605C','#F3AFA6']];
+    var a0=F[(v||0)%4],a1=F[((v||0)+1)%4],a2=F[((v||0)+2)%4];
+    var s=function(x,y,rot,c,c2){return '<g transform="translate('+x+','+y+') rotate('+rot+')">'
+      +'<rect x="-52" y="-18" width="104" height="36" rx="16" fill="'+c+'"/>'
+      +'<path d="M-44-8h88" stroke="'+c2+'" stroke-width="7" stroke-linecap="round"/>'
+      +'<path d="M-44 6h70" stroke="rgba(255,255,255,.35)" stroke-width="5" stroke-linecap="round"/></g>';};
+    return A('<ellipse cx="200" cy="212" rx="162" ry="42" fill="#F8F3EA"/>'
+      +'<path d="M104 176c30-12 70-16 110-10" stroke="#E9E3D3" stroke-width="18" fill="none" stroke-linecap="round"/>'
+      +s(150,178,-8,a0[0],a0[1])+s(228,158,6,a1[0],a1[1])+s(180,124,-3,a2[0],a2[1])
+      +'<circle cx="318" cy="196" r="20" fill="#8FA85C"/>'
+      ,'#F1EBE0','#E5DAC8');},
+
+  miso:function(){return A(
+    '<ellipse cx="200" cy="238" rx="104" ry="18" fill="rgba(60,40,20,.10)"/>'+steam
+    +'<path d="M106 140h188c0 50-42 78-94 78s-94-28-94-78Z" fill="#2C2D33"/>'
+    +'<path d="M106 140h188a94 94 0 0 1-1 12H107a94 94 0 0 1-1-12Z" fill="#C0362D"/>'
+    +'<ellipse cx="200" cy="140" rx="94" ry="24" fill="#3B3C43"/>'
+    +'<ellipse cx="200" cy="142" rx="80" ry="19" fill="#B8823C"/>'
+    +'<g fill="#FBF5E9"><rect x="168" y="130" width="24" height="18" rx="5"/><rect x="206" y="140" width="22" height="16" rx="5"/></g>'
+    +'<g fill="#5F9250"><circle cx="238" cy="134" r="5"/><circle cx="160" cy="150" r="4.5"/><circle cx="206" cy="128" r="4"/></g>'
+    ,'#F1E8DA','#E7D6BA');},
+
+  rice:function(){return A(
+    '<ellipse cx="200" cy="240" rx="104" ry="18" fill="rgba(60,40,20,.10)"/>'
+    +'<path d="M106 146h188c0 50-42 78-94 78s-94-28-94-78Z" fill="#F8F3E9"/>'
+    +'<path d="M106 146h188a94 94 0 0 1-1 12H107a94 94 0 0 1-1-12Z" fill="#C0362D"/>'
+    +'<ellipse cx="200" cy="146" rx="94" ry="24" fill="#EDE5D5"/>'
+    +'<path d="M124 142c8-30 40-46 76-46s68 16 76 46c-20 12-48 18-76 18s-56-6-76-18Z" fill="#FCFAF4"/>'
+    +'<g fill="#EDE6D6"><circle cx="176" cy="118" r="5"/><circle cx="214" cy="110" r="4.5"/><circle cx="240" cy="126" r="4"/></g>'
+    ,'#F2ECE0','#E7DCC7');},
+
+  matcha:function(){return A(
+    '<ellipse cx="200" cy="238" rx="112" ry="18" fill="rgba(60,40,20,.10)"/>'
+    +'<path d="M118 226 200 92l82 134H118Z" fill="#F6F1E4"/>'
+    +'<path d="M139 192h122l21 34H118l21-34Z" fill="#A9C077"/>'
+    +'<path d="M156 164h88l-10-18h-68l-10 18Z" fill="#8FA85C"/>'
+    +'<circle cx="200" cy="104" r="14" fill="#C0362D"/>'
+    +'<g fill="rgba(255,255,255,.4)"><path d="M172 206h56v6h-56z"/></g>'
+    ,'#F1EDE0','#E4E6CB');},
+
+  poke:function(){return A(
+    '<ellipse cx="200" cy="248" rx="126" ry="18" fill="rgba(60,40,20,.10)"/>'
+    +'<circle cx="200" cy="150" r="112" fill="#F8F3E9"/>'
+    +'<circle cx="200" cy="150" r="100" fill="#FCFAF4"/>'
+    +'<path d="M200 50a100 100 0 0 1 100 100H200Z" fill="#E8875C"/>'
+    +'<path d="M200 150h100a100 100 0 0 1-100 100Z" fill="#8FA85C"/>'
+    +'<path d="M200 250a100 100 0 0 1-100-100h100Z" fill="#EFC154"/>'
+    +'<circle cx="200" cy="150" r="26" fill="#FBF5E9"/><circle cx="200" cy="150" r="13" fill="#E7A33C"/>'
+    +'<g fill="#1F2B25"><circle cx="142" cy="106" r="9"/><circle cx="120" cy="130" r="7"/></g>'
+    ,'#F1E9DC','#E6D9C1');},
+
+  placeholder:function(){return A(
+    '<circle cx="200" cy="150" r="58" fill="none" stroke="rgba(25,26,28,.16)" stroke-width="3"/>'
+    +'<g transform="translate(200,150)" fill="none" stroke="rgba(25,26,28,.3)" stroke-width="4" stroke-linecap="round">'
+    +'<path d="M-16-22v18a6 6 0 0 0 12 0v-18"/><path d="M-10-4v26"/><path d="M16-22c-5 5-7 10-7 16s2 10 7 10v18"/></g>'
+    +'<path d="M150 214h100" stroke="rgba(25,26,28,.12)" stroke-width="4" stroke-linecap="round"/>'
+    ,'#F2EDE4','#E8E0D2');}
+};
+function dishArt(kind,seed){return (ART[kind]||ART.placeholder)(hashN(String(seed||'osaka')));}
+
+/* ---------- DONNÉES ---------- */
+const CATS=[
+ {id:'sugg',   name:'Suggestions',       icon:'sparkles'},
+ {id:'menus',  name:'Menus',             icon:'box'},
+ {id:'entrees',name:'Entrées',           icon:'leaf'},
+ {id:'sushis', name:'Sushis',            icon:'fish'},
+ {id:'makis',  name:'Makis',             icon:'sushi'},
+ {id:'califo', name:'California',        icon:'sushi'},
+ {id:'ramen',  name:'Ramen',             icon:'soup'},
+ {id:'chauds', name:'Plats chauds',      icon:'flame'},
+ {id:'accomp', name:'Accompagnements',   icon:'rice'},
+ {id:'desserts',name:'Desserts',         icon:'cake'},
+ {id:'boissons',name:'Boissons',         icon:'cup'},
+ {id:'sakes',  name:'Saké & japonais',   icon:'bottle'}
+];
+
+/* Groupes d'options réutilisables */
+const OPT={
+ ramenProt:{id:'prot',label:'Choisissez votre protéine',type:'single',required:true,choices:[
+   {id:'porc',label:'Porc mariné (chashu)',price:0,def:true},
+   {id:'poulet',label:'Poulet grillé',price:0},
+   {id:'tofu',label:'Sans viande — tofu grillé',price:0}]},
+ ramenCuisson:{id:'cuisson',label:'Cuisson des nouilles',type:'single',required:true,choices:[
+   {id:'std',label:'Standard',price:0,def:true},
+   {id:'ferme',label:'Ferme',price:0},
+   {id:'bien',label:'Bien cuite',price:0}]},
+ ramenSupp:{id:'supp',label:'Suppléments',type:'multi',required:false,choices:[
+   {id:'oeuf',label:'Œuf supplémentaire',price:1.5},
+   {id:'nouilles',label:'Nouilles supplémentaires',price:2},
+   {id:'porcx',label:'Porc supplémentaire',price:2.5},
+   {id:'mais',label:'Maïs doux',price:1}]},
+ riz:{id:'riz',label:'Accompagnement',type:'single',required:true,choices:[
+   {id:'blanc',label:'Riz blanc japonais',price:0,def:true},
+   {id:'vinaigre',label:'Riz vinaigré',price:0},
+   {id:'nouilles',label:'Nouilles sautées',price:1.5}]},
+ sauce:{id:'sauce',label:'Sauce soja',type:'single',required:false,choices:[
+   {id:'classique',label:'Sauce soja classique',price:0},
+   {id:'sucree',label:'Sauce soja sucrée',price:0},
+   {id:'sel',label:'Sauce soja réduite en sel',price:0},
+   {id:'sans',label:'Sans sauce',price:0}]},
+ accomp:{id:'acc',label:'À côté',type:'multi',required:false,choices:[
+   {id:'gingembre',label:'Gingembre mariné',price:0},
+   {id:'wasabi',label:'Wasabi',price:0},
+   {id:'sesame',label:'Sésame torréfié',price:0.5}]},
+ epice:{id:'epice',label:'Niveau d’épice',type:'single',required:true,choices:[
+   {id:'doux',label:'Doux',price:0,def:true},
+   {id:'moyen',label:'Moyen',price:0},
+   {id:'fort',label:'Fort',price:0}]},
+ taille:{id:'taille',label:'Format',type:'single',required:true,choices:[
+   {id:'33',label:'33 cl',price:0,def:true},
+   {id:'50',label:'50 cl',price:1.8}]},
+ glace:{id:'glace',label:'Servi',type:'single',required:true,choices:[
+   {id:'frais',label:'Bien frais',price:0,def:true},
+   {id:'temp',label:'Température ambiante',price:0}]},
+ sakeTemp:{id:'temp',label:'Température',type:'single',required:true,choices:[
+   {id:'tiede',label:'Tiède (atsukan)',price:0,def:true},
+   {id:'froid',label:'Froid (reishu)',price:0}]}
+};
+
+const PRODUCTS=[
+ /* MENUS */
+ {id:'m1',cat:'menus',name:'Menu Osaka',price:19.9,art:'bento',sugg:true,badges:['chef'],
+  desc:'6 sushis saumon, 6 makis concombre, salade de chou, miso et mochi.',
+  ing:'Riz vinaigré, saumon, concombre, algue nori, chou blanc, miso, mochi.',
+  aller:['Poisson','Soja','Gluten'],options:[OPT.sauce,OPT.accomp]},
+ {id:'m2',cat:'menus',name:'Menu Ramen du midi',price:16.5,art:'ramen',badges:['pop'],
+  desc:'Un ramen au choix, 3 gyoza et une boisson japonaise.',
+  ing:'Bouillon maison, nouilles de blé, garnitures du jour.',
+  aller:['Gluten','Soja','Œuf'],options:[OPT.ramenProt,OPT.ramenCuisson,OPT.ramenSupp]},
+ {id:'m3',cat:'menus',name:'Menu Découverte',price:24.5,art:'sashimi',
+  desc:'Assortiment de 12 pièces, sashimi de saumon, edamame et dessert.',
+  ing:'Saumon, thon, riz vinaigré, edamame, dessert du jour.',
+  aller:['Poisson','Soja'],options:[OPT.sauce]},
+ {id:'m4',cat:'menus',name:'Menu Végétarien',price:17.9,art:'poke',badges:['veg'],
+  desc:'Makis avocat, california légumes, edamame et soupe miso.',
+  ing:'Avocat, concombre, carotte, riz vinaigré, edamame, miso.',
+  aller:['Soja','Gluten'],options:[OPT.sauce,OPT.accomp]},
+
+ /* ENTRÉES */
+ {id:'e1',cat:'entrees',name:'Gyoza au porc',price:6.9,art:'gyoza',sugg:true,badges:['pop'],
+  desc:'6 raviolis japonais grillés, porc et légumes, sauce ponzu.',
+  ing:'Pâte de blé, porc, chou, ciboule, gingembre, sauce ponzu.',
+  aller:['Gluten','Soja','Sésame'],options:[{id:'cuis',label:'Cuisson',type:'single',required:true,choices:[
+    {id:'grille',label:'Grillés (yaki)',price:0,def:true},{id:'vapeur',label:'Vapeur',price:0}]}]},
+ {id:'e2',cat:'entrees',name:'Edamame au sel de mer',price:5.5,art:'edamame',badges:['veg','gf'],
+  desc:'Fèves de soja tièdes, fleur de sel japonaise.',
+  ing:'Fèves de soja, sel de mer.',aller:['Soja'],options:[]},
+ {id:'e3',cat:'entrees',name:'Soupe miso',price:4.2,art:'miso',
+  desc:'Bouillon dashi, pâte de miso, tofu et algues wakame.',
+  ing:'Dashi, miso, tofu, wakame, ciboule.',aller:['Soja','Poisson'],options:[]},
+ {id:'e4',cat:'entrees',name:'Tempura de crevettes',price:8.9,art:'tempura',badges:['pop'],
+  desc:'5 crevettes en beignet léger, sauce tentsuyu.',
+  ing:'Crevettes, farine de blé, œuf, sauce tentsuyu.',
+  aller:['Crustacés','Gluten','Œuf','Soja'],options:[OPT.accomp]},
+ {id:'e5',cat:'entrees',name:'Salade de chou sésame',price:4.9,art:'edamame',badges:['veg'],
+  desc:'Chou croquant, vinaigrette au sésame torréfié.',
+  ing:'Chou blanc, sésame, vinaigre de riz, huile de sésame.',
+  aller:['Sésame','Soja'],options:[]},
+ {id:'e6',cat:'entrees',name:'Sashimi de saumon',price:9.9,art:'sashimi',badges:['gf'],
+  desc:'6 tranches épaisses de saumon, wasabi frais.',
+  ing:'Saumon, wasabi, gingembre mariné.',aller:['Poisson'],options:[OPT.accomp]},
+
+ /* SUSHIS */
+ {id:'s1',cat:'sushis',name:'Sushi saumon',price:5.9,art:'nigiri',sugg:true,
+  desc:'2 pièces. Riz vinaigré et saumon frais.',
+  ing:'Riz japonais, vinaigre de riz, saumon.',aller:['Poisson'],options:[OPT.sauce,OPT.accomp]},
+ {id:'s2',cat:'sushis',name:'Sushi thon',price:6.5,art:'nigiri',
+  desc:'2 pièces. Thon rouge taillé à la main.',
+  ing:'Riz japonais, thon rouge.',aller:['Poisson'],options:[OPT.sauce,OPT.accomp]},
+ {id:'s3',cat:'sushis',name:'Sushi crevette',price:5.5,art:'nigiri',
+  desc:'2 pièces. Crevette marinée au yuzu.',
+  ing:'Riz japonais, crevette, yuzu.',aller:['Crustacés'],options:[OPT.sauce]},
+ {id:'s4',cat:'sushis',name:'Sushi anguille laquée',price:7.9,art:'nigiri',badges:['chef'],
+  desc:'2 pièces. Anguille grillée, sauce kabayaki.',
+  ing:'Riz japonais, anguille, sauce soja, mirin.',aller:['Poisson','Soja','Gluten'],options:[OPT.accomp]},
+ {id:'s5',cat:'sushis',name:'Plateau 12 sushis',price:18.9,art:'sashimi',badges:['pop'],
+  desc:'Saumon, thon, daurade et crevette. Idéal à partager.',
+  ing:'Riz vinaigré, saumon, thon, daurade, crevette.',
+  aller:['Poisson','Crustacés'],options:[OPT.sauce,OPT.accomp]},
+ {id:'s6',cat:'sushis',name:'Salmon Roll',price:12.5,art:'nigiri',out:true,
+  desc:'Rouleau généreux au saumon, avocat et ciboulette.',
+  ing:'Riz vinaigré, saumon, avocat, ciboulette.',aller:['Poisson'],options:[OPT.sauce]},
+
+ /* MAKIS */
+ {id:'k1',cat:'makis',name:'Makis saumon',price:5.5,art:'maki',sugg:true,
+  desc:'6 pièces. Saumon frais et riz vinaigré, algue nori.',
+  ing:'Riz japonais, saumon, nori.',aller:['Poisson'],options:[OPT.sauce,OPT.accomp]},
+ {id:'k2',cat:'makis',name:'Makis concombre',price:4.5,art:'maki',badges:['veg'],
+  desc:'6 pièces. Concombre croquant et sésame.',
+  ing:'Riz japonais, concombre, nori, sésame.',aller:['Sésame'],options:[OPT.sauce]},
+ {id:'k3',cat:'makis',name:'Makis avocat',price:4.9,art:'maki',badges:['veg'],
+  desc:'6 pièces. Avocat mûr à point.',
+  ing:'Riz japonais, avocat, nori.',aller:[],options:[OPT.sauce]},
+ {id:'k4',cat:'makis',name:'Makis thon épicé',price:6.5,art:'maki',badges:['spicy'],
+  desc:'6 pièces. Thon, mayonnaise épicée, ciboule.',
+  ing:'Riz japonais, thon, mayonnaise, piment, ciboule.',
+  aller:['Poisson','Œuf','Soja'],options:[OPT.epice,OPT.sauce]},
+ {id:'k5',cat:'makis',name:'Makis tempura crevette',price:7.5,art:'maki',badges:['new'],
+  desc:'6 pièces. Crevette croustillante et sauce maison.',
+  ing:'Riz japonais, crevette, panure, nori, sauce maison.',
+  aller:['Crustacés','Gluten','Œuf'],options:[OPT.sauce]},
+
+ /* CALIFORNIA */
+ {id:'c1',cat:'califo',name:'California saumon avocat',price:6.9,art:'california',sugg:true,badges:['pop'],
+  desc:'6 pièces. Saumon, avocat, sésame torréfié.',
+  ing:'Riz vinaigré, saumon, avocat, sésame.',aller:['Poisson','Sésame'],options:[OPT.sauce,OPT.accomp]},
+ {id:'c2',cat:'califo',name:'California crevette mangue',price:7.5,art:'california',badges:['new'],
+  desc:'6 pièces. Crevette, mangue fraîche, coriandre.',
+  ing:'Riz vinaigré, crevette, mangue, coriandre.',aller:['Crustacés'],options:[OPT.sauce]},
+ {id:'c3',cat:'califo',name:'California légumes',price:6.2,art:'california',badges:['veg'],
+  desc:'6 pièces. Avocat, concombre, carotte marinée.',
+  ing:'Riz vinaigré, avocat, concombre, carotte.',aller:['Sésame'],options:[OPT.sauce]},
+ {id:'c4',cat:'califo',name:'California poulet croustillant',price:7.2,art:'california',
+  desc:'6 pièces. Poulet pané, salade, sauce yuzu.',
+  ing:'Riz vinaigré, poulet, panure, salade, yuzu.',
+  aller:['Gluten','Œuf','Soja'],options:[OPT.sauce]},
+
+ /* RAMEN */
+ {id:'r1',cat:'ramen',name:'Shoyu Ramen',price:13.5,art:'ramen',sugg:true,badges:['pop','chef'],
+  desc:'Bouillon shoyu, nouilles japonaises, porc mariné, œuf et légumes.',
+  ing:'Bouillon de volaille, sauce soja, nouilles de blé, chashu de porc, œuf mariné, pousses de bambou, nori, ciboule.',
+  aller:['Gluten','Soja','Œuf'],options:[OPT.ramenProt,OPT.ramenCuisson,OPT.ramenSupp]},
+ {id:'r2',cat:'ramen',name:'Tonkotsu Ramen',price:14.9,art:'ramen',badges:['chef'],
+  desc:'Bouillon de porc mijoté 12 h, nouilles fines, chashu fondant.',
+  ing:'Bouillon d’os de porc, nouilles fines, chashu, œuf mariné, champignons noirs.',
+  aller:['Gluten','Soja','Œuf'],options:[OPT.ramenProt,OPT.ramenCuisson,OPT.ramenSupp]},
+ {id:'r3',cat:'ramen',name:'Miso Ramen',price:13.9,art:'ramen',
+  desc:'Bouillon miso corsé, maïs doux, beurre et ciboule.',
+  ing:'Bouillon miso, nouilles de blé, maïs, beurre, ciboule.',
+  aller:['Gluten','Soja','Lait'],options:[OPT.ramenProt,OPT.ramenCuisson,OPT.ramenSupp]},
+ {id:'r4',cat:'ramen',name:'Spicy Ramen',price:14.5,art:'ramen',badges:['spicy'],
+  desc:'Bouillon relevé au piment, porc haché et huile pimentée.',
+  ing:'Bouillon épicé, nouilles, porc haché, huile de piment, ciboule.',
+  aller:['Gluten','Soja'],options:[OPT.epice,OPT.ramenCuisson,OPT.ramenSupp]},
+ {id:'r5',cat:'ramen',name:'Ramen végétarien',price:12.9,art:'ramen',badges:['veg'],
+  desc:'Bouillon de légumes et champignons, tofu grillé.',
+  ing:'Bouillon de légumes, shiitake, tofu, épinards, maïs.',
+  aller:['Gluten','Soja'],options:[OPT.ramenCuisson,OPT.ramenSupp]},
+
+ /* PLATS CHAUDS */
+ {id:'h1',cat:'chauds',name:'Poulet teriyaki',price:13.9,art:'donburi',sugg:true,badges:['pop'],
+  desc:'Poulet grillé laqué à la sauce teriyaki, riz japonais.',
+  ing:'Poulet, sauce soja, mirin, sucre, sésame, riz.',
+  aller:['Soja','Gluten','Sésame'],options:[OPT.riz,OPT.accomp]},
+ {id:'h2',cat:'chauds',name:'Bœuf sauté yakiniku',price:16.9,art:'donburi',
+  desc:'Bœuf mariné, oignons et poivrons, sauce yakiniku.',
+  ing:'Bœuf, oignon, poivron, sauce yakiniku, sésame.',
+  aller:['Soja','Gluten','Sésame'],options:[OPT.riz]},
+ {id:'h3',cat:'chauds',name:'Yakitori poulet',price:9.9,art:'yakitori',
+  desc:'3 brochettes de poulet laquées au charbon.',
+  ing:'Poulet, sauce tare, ciboule.',aller:['Soja','Gluten'],options:[OPT.accomp]},
+ {id:'h4',cat:'chauds',name:'Katsu curry',price:15.5,art:'donburi',badges:['new'],
+  desc:'Porc pané croustillant, curry japonais doux et riz.',
+  ing:'Porc, panure panko, curry japonais, riz, carotte, pomme de terre.',
+  aller:['Gluten','Œuf','Soja'],options:[OPT.epice,OPT.riz]},
+ {id:'h5',cat:'chauds',name:'Chirashi du chef',price:18.5,art:'poke',badges:['chef'],
+  desc:'Bol de riz vinaigré, saumon, thon, avocat et légumes croquants.',
+  ing:'Riz vinaigré, saumon, thon, avocat, radis, edamame.',
+  aller:['Poisson','Soja'],options:[OPT.sauce,OPT.accomp]},
+
+ /* ACCOMPAGNEMENTS */
+ {id:'a1',cat:'accomp',name:'Riz blanc japonais',price:3.2,art:'rice',badges:['veg','gf'],
+  desc:'Riz rond cuit à la vapeur.',ing:'Riz japonais.',aller:[],options:[]},
+ {id:'a2',cat:'accomp',name:'Nouilles sautées',price:5.5,art:'ramen',badges:['veg'],
+  desc:'Nouilles yakisoba et légumes croquants.',
+  ing:'Nouilles de blé, chou, carotte, sauce yakisoba.',aller:['Gluten','Soja'],options:[]},
+ {id:'a3',cat:'accomp',name:'Légumes vapeur',price:4.5,art:'edamame',badges:['veg','gf'],
+  desc:'Brocoli, carotte et pois gourmands.',ing:'Brocoli, carotte, pois gourmands.',aller:[],options:[]},
+
+ /* DESSERTS */
+ {id:'d1',cat:'desserts',name:'Mochis glacés',price:6.5,art:'mochi',sugg:true,badges:['pop'],
+  desc:'3 mochis au choix : vanille, matcha, fruits rouges.',
+  ing:'Pâte de riz gluant, crème glacée.',aller:['Lait'],
+  options:[{id:'parfums',label:'Choisissez vos parfums',type:'multi',required:true,choices:[
+    {id:'vanille',label:'Vanille',price:0},{id:'matcha',label:'Matcha',price:0},
+    {id:'fruits',label:'Fruits rouges',price:0},{id:'coco',label:'Coco',price:0}]}]},
+ {id:'d2',cat:'desserts',name:'Dorayaki',price:5.9,art:'dorayaki',
+  desc:'Deux pancakes moelleux fourrés à la pâte de haricot rouge.',
+  ing:'Farine, œuf, miel, pâte d’azuki.',aller:['Gluten','Œuf'],options:[]},
+ {id:'d3',cat:'desserts',name:'Cheesecake matcha',price:6.9,art:'matcha',badges:['new'],
+  desc:'Crémeux au thé vert matcha, base sablée.',
+  ing:'Fromage frais, matcha, biscuit, crème.',aller:['Lait','Gluten','Œuf'],options:[]},
+ {id:'d4',cat:'desserts',name:'Salade de fruits yuzu',price:5.2,art:'poke',badges:['veg','gf'],
+  desc:'Fruits frais de saison, sirop léger au yuzu.',
+  ing:'Fruits de saison, yuzu, sucre de canne.',aller:[],options:[]},
+
+ /* BOISSONS */
+ {id:'b1',cat:'boissons',name:'Bière Asahi',price:4.2,art:'beer',sugg:true,
+  desc:'Bière japonaise blonde, sèche et désaltérante. 5 %.',
+  ing:'Eau, malt d’orge, riz, houblon.',aller:['Gluten'],options:[OPT.taille]},
+ {id:'b2',cat:'boissons',name:'Thé vert sencha',price:3.5,art:'tea',badges:['gf'],
+  desc:'Thé vert japonais infusé à la commande.',ing:'Thé vert sencha.',aller:[],options:[
+   {id:'temp2',label:'Servi',type:'single',required:true,choices:[
+    {id:'chaud',label:'Chaud',price:0,def:true},{id:'glace',label:'Glacé',price:0}]}]},
+ {id:'b3',cat:'boissons',name:'Ramune',price:4.5,art:'softdrink',badges:['new'],
+  desc:'Limonade japonaise à la bille, parfum original.',
+  ing:'Eau gazéifiée, sucre, arômes.',aller:[],options:[
+   {id:'parfum',label:'Parfum',type:'single',required:true,choices:[
+    {id:'orig',label:'Original',price:0,def:true},{id:'litchi',label:'Litchi',price:0},{id:'melon',label:'Melon',price:0}]}]},
+ {id:'b4',cat:'boissons',name:'Eau plate ou pétillante',price:3.2,art:'softdrink',badges:['gf'],
+  desc:'Bouteille 75 cl.',ing:'Eau.',aller:[],options:[
+   {id:'type',label:'Type',type:'single',required:true,choices:[
+    {id:'plate',label:'Plate',price:0,def:true},{id:'petillante',label:'Pétillante',price:0}]}]},
+ {id:'b5',cat:'boissons',name:'Soda',price:3.8,art:'softdrink',
+  desc:'Cola, limonade ou orange.',ing:'Eau gazéifiée, sucre, arômes.',aller:[],options:[
+   {id:'parfum2',label:'Parfum',type:'single',required:true,choices:[
+    {id:'cola',label:'Cola',price:0,def:true},{id:'limo',label:'Limonade',price:0},{id:'orange',label:'Orange',price:0}]},OPT.glace]},
+
+ /* SAKÉ */
+ {id:'sk1',cat:'sakes',name:'Saké Junmai',price:8.9,art:'sake',badges:['chef'],
+  desc:'Saké pur riz, notes rondes et fruitées. Carafe 15 cl.',
+  ing:'Riz, eau, koji.',aller:[],options:[OPT.sakeTemp]},
+ {id:'sk2',cat:'sakes',name:'Saké Daiginjo',price:14.9,art:'sake',
+  desc:'Saké premium, très aromatique. Carafe 15 cl.',
+  ing:'Riz poli, eau, koji.',aller:[],options:[OPT.sakeTemp]},
+ {id:'sk3',cat:'sakes',name:'Umeshu',price:7.5,art:'sake',badges:['pop'],
+  desc:'Liqueur de prune japonaise, servie sur glace.',
+  ing:'Prunes ume, alcool, sucre.',aller:[],options:[OPT.glace]},
+ {id:'sk4',cat:'sakes',name:'Whisky japonais',price:11.5,art:'sake',
+  desc:'Blend japonais, 4 cl.',ing:'Whisky.',aller:['Gluten'],options:[OPT.glace]}
+];
+
+const BADGE_META={
+ pop:{label:'Populaire',cls:'badge-pop',icon:'star'},
+ new:{label:'Nouveau',cls:'badge-new',icon:'sparkles'},
+ spicy:{label:'Épicé',cls:'badge-spicy',icon:'flame'},
+ veg:{label:'Végétarien',cls:'badge-veg',icon:'leaf'},
+ chef:{label:'Chef’s choice',cls:'badge-chef',icon:'chef'},
+ gf:{label:'Sans gluten',cls:'badge-gf',icon:'noGluten'}
+};
+
+/* ---------- ÉTAT ---------- */
+const S={
+ route:'home',
+ cat:'sugg',
+ query:'',
+ cart:[],
+ orderNote:'',
+ orders:[],
+ nextOrderNo:42,
+ table:12,
+ loading:false,
+ netError:false,
+ orderError:false,
+ closed:false,
+ full:false,
+ cartOpen:false,
+ res:null,          /* réservation en cours de saisie */
+ lastRes:null,      /* réservation confirmée / retrouvée */
+ waitlist:null,
+ filters:[],
+ menuLoaded:false
+};
+
+function newRes(){return {step:0,people:2,when:null,date:todayISO(),time:null,pref:'none',name:'',phone:'',sms:true,email:''};}
+
+/* ---------- UTILITAIRES ---------- */
+const $=function(s,r){return (r||document).querySelector(s);};
+const $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s));};
+function eur(n){return n.toFixed(2).replace('.',',')+' €';}
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function uid(){return Math.random().toString(36).slice(2,10);}
+function todayISO(){var d=new Date();return d.toISOString().slice(0,10);}
+const DOW=['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'];
+const DOW_S=['dim.','lun.','mar.','mer.','jeu.','ven.','sam.'];
+const MON=['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+function parseISO(s){var p=s.split('-');return new Date(+p[0],+p[1]-1,+p[2]);}
+function isoOf(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function fmtDateLong(iso){var d=parseISO(iso);return DOW[d.getDay()]+' '+d.getDate()+' '+MON[d.getMonth()];}
+function fmtDateShort(iso){var d=parseISO(iso);return DOW_S[d.getDay()]+' '+d.getDate();}
+function addDays(iso,n){var d=parseISO(iso);d.setDate(d.getDate()+n);return isoOf(d);}
+function prod(id){for(var i=0;i<PRODUCTS.length;i++){if(PRODUCTS[i].id===id)return PRODUCTS[i];}return null;}
+function catName(id){for(var i=0;i<CATS.length;i++){if(CATS[i].id===id)return CATS[i].name;}return '';}
+function productsOf(cat){
+ if(cat==='sugg')return PRODUCTS.filter(function(p){return p.sugg;});
+ return PRODUCTS.filter(function(p){return p.cat===cat;});
+}
+function countOf(cat){return productsOf(cat).length;}
+
+/* Panier */
+function cartCount(){return S.cart.reduce(function(a,l){return a+l.qty;},0);}
+function lineUnit(l){var p=prod(l.pid),t=p.price;
+ (l.opts||[]).forEach(function(o){t+=o.price||0;});return t;}
+function lineTotal(l){return lineUnit(l)*l.qty;}
+function cartSubtotal(){return S.cart.reduce(function(a,l){return a+lineTotal(l);},0);}
+function optsLabel(l){return (l.opts||[]).map(function(o){return o.label;}).join(' · ');}
+
+/* ---------- TOASTS ---------- */
+function toast(msg,kind){
+ var el=document.createElement('div');
+ el.className='toast '+(kind==='err'?'toast-err':'toast-ok');
+ el.innerHTML=ic(kind==='err'?'alertC':'checkC')+'<span>'+esc(msg)+'</span>';
+ $('#toasts').appendChild(el);
+ setTimeout(function(){el.classList.add('is-out');setTimeout(function(){el.remove();},220);},2400);
+}
+
+/* ---------- COUCHES (modales / tiroirs / bottom sheets) ---------- */
+function layer(html){
+ var d=document.createElement('div');d.innerHTML=html.trim();
+ var node=d.firstElementChild;$('#layers').appendChild(node);return node;
+}
+function closeTop(){var l=$('#layers');if(l.lastElementChild)l.lastElementChild.remove();}
+function closeAllLayers(){$('#layers').innerHTML='';}
+function modal(opts){
+ return layer('<div class="overlay" data-overlay>'
+  +'<div class="modal '+(opts.wide?'modal-wide':'')+'" role="dialog" aria-modal="true">'
+  +(opts.head!==false?'<div class="modal-head">'
+    +'<div class="grow"><h2 class="t-h2">'+opts.title+'</h2>'
+    +(opts.sub?'<p class="t-sm mt2">'+opts.sub+'</p>':'')+'</div>'
+    +(opts.closable===false?'':'<button class="icon-btn icon-btn-ghost" data-act="close-layer" aria-label="Fermer">'+ic('x')+'</button>')
+    +'</div>':'')
+  +'<div class="modal-body">'+(opts.body||'')+'</div>'
+  +(opts.foot?'<div class="modal-foot">'+opts.foot+'</div>':'')
+  +'</div></div>');
+}
+function sheet(opts){
+ return layer('<div class="sheet-wrap" data-overlay>'
+  +'<div class="sheet" role="dialog" aria-modal="true">'
+  +'<div class="sheet-grab"></div>'
+  +'<div class="modal-head"><div class="grow"><h2 class="t-h2">'+opts.title+'</h2>'
+  +(opts.sub?'<p class="t-sm mt2">'+opts.sub+'</p>':'')+'</div>'
+  +'<button class="icon-btn icon-btn-ghost" data-act="close-layer" aria-label="Fermer">'+ic('x')+'</button></div>'
+  +'<div class="modal-body scroll">'+(opts.body||'')+'</div>'
+  +(opts.foot?'<div class="modal-foot">'+opts.foot+'</div>':'')
+  +'</div></div>');
+}
+
+/* ---------- FRAGMENTS RÉUTILISABLES ---------- */
+function badgeHTML(k){var b=BADGE_META[k];if(!b)return '';return '<span class="badge '+b.cls+'">'+ic(b.icon)+b.label+'</span>';}
+function badgesHTML(list,max){return (list||[]).slice(0,max||2).map(badgeHTML).join('');}
+
+function qtyHTML(id,qty,opts){
+ opts=opts||{};
+ var minusIcon=(qty<=1&&opts.trash)?ic('trash'):ic('minus');
+ return '<div class="qty '+(opts.size||'')+'" role="group" aria-label="Quantité">'
+  +'<button class="'+(qty<=1&&opts.trash?'q-trash':'')+'" data-act="qty-down" data-id="'+id+'" aria-label="'+(qty<=1&&opts.trash?'Retirer du panier':'Réduire la quantité')+'">'+minusIcon+'</button>'
+  +'<span class="q-val" data-qval="'+id+'" aria-live="polite">'+qty+'</span>'
+  +'<button data-act="qty-up" data-id="'+id+'" aria-label="Augmenter la quantité">'+ic('plus')+'</button>'
+  +'</div>';
+}
+
+function skeletonGrid(n){
+ var out='';
+ for(var i=0;i<(n||8);i++){
+  out+='<div class="sk-card"><div class="sk sk-img"></div><div style="padding:16px 20px 20px">'
+   +'<div class="sk sk-line" style="width:70%"></div>'
+   +'<div class="sk sk-line" style="width:92%;margin-top:10px;height:11px"></div>'
+   +'<div class="sk sk-line" style="width:55%;margin-top:8px;height:11px"></div>'
+   +'<div class="row between mt4"><div class="sk sk-line" style="width:64px;height:20px"></div>'
+   +'<div class="sk" style="width:96px;height:48px;border-radius:999px"></div></div></div></div>';
+ }
+ return out;
+}
+
+/* ---------- TOPBAR ---------- */
+function renderTopbar(){
+ var n=cartCount();
+ var tabs=[
+  {id:'home',label:'Accueil',icon:'home',routes:['home']},
+  {id:'menu',label:'Carte',icon:'book',routes:['menu']},
+  {id:'cart',label:'Ma commande',icon:'bag',routes:['cart','order-sent','order-status']},
+  {id:'reserve',label:'Réservation',icon:'calendar',routes:['reserve','res-confirmed','find-res','res-found','arrival-ok','waitlist','waitlist-joined']}
+ ];
+ $('#topbar').innerHTML=
+  '<div class="brand"><div class="brand-sun"></div>'
+  +'<div class="brand-txt"><b>Osaka</b><span>Restaurant japonais</span></div></div>'
+  +'<nav class="nav" aria-label="Navigation principale">'
+  +tabs.map(function(t){
+    var cur=t.routes.indexOf(S.route)>=0;
+    return '<button class="nav-item" data-act="nav" data-to="'+t.id+'" aria-current="'+cur+'">'
+      +ic(t.icon)+'<span>'+t.label+'</span>'
+      +(t.id==='cart'&&n>0?'<em class="nav-dot num" style="font-style:normal">'+n+'</em>':'')+'</button>';
+  }).join('')
+  +'</nav>'
+  +'<div class="topbar-right">'
+  +'<button class="btn demo-chip" data-act="demo-open">'+ic('sliders')+'<span>Scénarios</span></button>'
+  +'<button class="icon-btn" data-act="help" aria-label="Besoin d’aide">'+ic('help')+'</button>'
+  +'<div class="table-badge"><span class="tb-num num">'+S.table+'</span>'
+  +'<span class="tb-lbl"><small>Votre table</small><b>Table '+S.table+'</b></span></div>'
+  +'</div>';
+}
+
+/* ---------- ÉCRAN 1 — ACCUEIL ---------- */
+function heroArt(){
+ return '<svg viewBox="0 0 620 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">'
+ +'<rect width="620" height="900" fill="#EFE6D8"/>'
+ +'<circle cx="330" cy="330" r="212" fill="#E7D8C1"/>'
+ +'<circle cx="330" cy="330" r="150" fill="#C0362D" opacity=".92"/>'
+ /* noren */
+ +'<g fill="#22232A"><rect x="0" y="0" width="620" height="86" rx="0"/>'
+ +'<rect x="18" y="86" width="106" height="112" rx="6"/><rect x="150" y="86" width="106" height="112" rx="6"/>'
+ +'<rect x="282" y="86" width="106" height="112" rx="6"/><rect x="414" y="86" width="106" height="112" rx="6"/>'
+ +'<rect x="546" y="86" width="74" height="112" rx="6"/></g>'
+ +'<g fill="#C0362D"><rect x="18" y="86" width="106" height="9"/><rect x="150" y="86" width="106" height="9"/>'
+ +'<rect x="282" y="86" width="106" height="9"/><rect x="414" y="86" width="106" height="9"/><rect x="546" y="86" width="74" height="9"/></g>'
+ /* grand bol de ramen */
+ +'<g transform="translate(310,560) scale(1.62)">'
+ +'<ellipse cx="0" cy="112" rx="150" ry="24" fill="rgba(60,40,20,.14)"/>'
+ +'<path d="M-146-8h292c0 68-66 106-146 106S-146 60-146-8Z" fill="#22232A"/>'
+ +'<path d="M-146-8h292a146 146 0 0 1-1.8 16h-288.4A146 146 0 0 1-146-8Z" fill="#C0362D"/>'
+ +'<ellipse cx="0" cy="-8" rx="146" ry="38" fill="#33343B"/>'
+ +'<ellipse cx="0" cy="-6" rx="128" ry="31" fill="#B4762F"/>'
+ +'<g stroke="#F2DCA8" stroke-width="8" fill="none" stroke-linecap="round">'
+ +'<path d="M-86-6c18-14 48-16 68-6"/><path d="M-72 6c18-14 48-16 68-6"/><path d="M-96-16c16-13 42-15 60-7"/></g>'
+ +'<path d="M-56-40l38 8v40l-38-8Z" fill="#1E2A25"/>'
+ +'<ellipse cx="52" cy="-10" rx="30" ry="19" fill="#FCF6EA"/><ellipse cx="52" cy="-10" rx="14" ry="9" fill="#E7A33C"/>'
+ +'<ellipse cx="-22" cy="2" rx="27" ry="16" fill="#CB8F62"/><ellipse cx="-22" cy="2" rx="14" ry="8" fill="#A96E45"/>'
+ +'<g fill="#5F9250"><circle cx="16" cy="-22" r="6"/><circle cx="34" cy="12" r="5"/><circle cx="-4" cy="14" r="4.6"/></g>'
+ +'</g>'
+ /* baguettes */
+ +'<g transform="rotate(-16 470 470)" fill="#C9A87B"><rect x="392" y="416" width="230" height="11" rx="5"/><rect x="392" y="438" width="230" height="11" rx="5"/></g>'
+ +'</svg>';
+}
+
+function screenHome(){
+ var closedBanner=S.closed
+  ? '<div class="notice notice-danger" style="margin-bottom:4px">'+ic('clock')
+    +'<div><b>Le restaurant est actuellement fermé.</b><br>Prochaine ouverture : <b>19:00</b>. Vous pouvez réserver pour plus tard.</div></div>'
+  : '';
+ return '<div class="home">'
+ +'<div class="home-left scroll">'
+   +closedBanner
+   +'<div class="stack gap4">'
+     +'<div class="home-hero-mark"><div class="home-sun"></div>'
+     +'<div><div class="home-name">Osaka</div><div class="home-sub">Restaurant japonais</div></div></div>'
+     +'<div class="home-meta">'
+       +'<span class="rating">'+ic('star')+'4,4<span class="mute" style="font-weight:600"> / 5</span></span>'
+       +'<span class="dot-sep"></span><span class="t-sm">≈ 1 500 avis</span>'
+       +'<span class="dot-sep"></span><span class="t-sm">10–20 € par personne</span>'
+       +'<span class="t-sm" style="flex-basis:100%">Sur place · À emporter · Livraison · Ouvert 11:45–14:30 et 19:00–22:30</span>'
+     +'</div>'
+   +'</div>'
+   +'<div class="stack gap2">'
+     +'<h1 class="t-h1">Bienvenue chez Osaka</h1>'
+     +'<p class="t-lead">Que souhaitez-vous faire ?</p>'
+   +'</div>'
+   +'<div class="home-actions">'
+     +'<button class="action-card action-card-primary" data-act="nav" data-to="menu">'
+       +'<span class="action-ico">'+ic('utensils')+'</span>'
+       +'<span class="action-txt"><b>Commander</b><span>Découvrir notre carte et commander depuis votre table</span></span>'
+       +'<span class="action-arrow">'+ic('arrR')+'</span></button>'
+     +'<button class="action-card" data-act="nav" data-to="reserve">'
+       +'<span class="action-ico">'+ic('calendar')+'</span>'
+       +'<span class="action-txt"><b>Réserver une table</b><span>Réserver une table en quelques secondes</span></span>'
+       +'<span class="action-arrow">'+ic('arrR')+'</span></button>'
+     +'<button class="action-card" data-act="nav" data-to="find-res">'
+       +'<span class="action-ico">'+ic('search')+'</span>'
+       +'<span class="action-txt"><b>J’ai déjà une réservation</b><span>Retrouver ma réservation et signaler mon arrivée</span></span>'
+       +'<span class="action-arrow">'+ic('arrR')+'</span></button>'
+   +'</div>'
+   +'<div class="home-foot">'
+     +'<button class="btn btn-tertiary" data-act="help">'+ic('help')+'Besoin d’aide ?</button>'
+     +(S.orders.length?'<button class="btn btn-secondary" data-act="nav" data-to="order-status">'+ic('receipt')+'Suivre ma commande</button>':'')
+     +'<button class="btn btn-tertiary" data-act="nav" data-to="ds">'+ic('palette')+'Design system</button>'
+   +'</div>'
+ +'</div>'
+ +'<div class="home-right"><div class="home-art">'+heroArt()+'</div>'
+   +'<div class="home-quote"><b>Bienvenue à table</b>'
+   +'<span>Notre carte change au fil des saisons. Commandez à votre rythme : chaque plat part en cuisine dès que vous validez.</span></div>'
+ +'</div></div>';
+}
+
+/* ---------- ÉCRAN 2 — CARTE / CATALOGUE ---------- */
+function filteredProducts(){
+ var list;
+ if(S.query.trim()){
+  var q=S.query.trim().toLowerCase();
+  list=PRODUCTS.filter(function(p){
+   return (p.name+' '+p.desc+' '+catName(p.cat)).toLowerCase().indexOf(q)>=0;});
+ }else{list=productsOf(S.cat);}
+ if(S.filters.length){
+  list=list.filter(function(p){return S.filters.every(function(f){return (p.badges||[]).indexOf(f)>=0;});});
+ }
+ return list;
+}
+function inCartQty(pid){return S.cart.filter(function(l){return l.pid===pid;}).reduce(function(a,l){return a+l.qty;},0);}
+
+function productCard(p){
+ var n=inCartQty(p.id);
+ return '<article class="p-card '+(p.out?'is-out':'')+'">'
+  +'<button class="p-media" data-act="open-product" data-id="'+p.id+'" aria-label="Voir '+esc(p.name)+'">'
+    +dishArt(p.art,p.id)
+    +(p.badges&&p.badges.length?'<span class="p-badges">'+badgesHTML(p.badges,2)+'</span>':'')
+    +(n&&!p.out?'<span class="p-incart num" aria-label="'+n+' au panier">'+n+'</span>':'')
+    +(p.out?'<span class="p-out-tag">'+ic('info')+'Indisponible actuellement</span>':'')
+  +'</button>'
+  +'<div class="p-body">'
+    +'<button class="p-name" data-act="open-product" data-id="'+p.id+'" style="text-align:left">'+esc(p.name)+'</button>'
+    +'<p class="p-desc">'+esc(p.desc)+'</p>'
+    +'<div class="p-foot"><span class="t-price">'+eur(p.price)+'</span>'
+    +(p.out
+      ? '<button class="p-add" disabled aria-disabled="true">Indisponible</button>'
+      : '<button class="p-add" data-act="quick-add" data-id="'+p.id+'" aria-label="Ajouter '+esc(p.name)+' au panier">Ajouter '+ic('plus')+'</button>')
+    +'</div>'
+  +'</div></article>';
+}
+
+function screenMenu(){
+ return '<div class="menu-layout">'
+  +'<aside class="cats" aria-label="Catégories">'
+    +'<div class="cats-head"><span class="t-eyebrow">La carte</span></div>'
+    +'<div class="cats-list scroll" role="tablist">'
+    +CATS.map(function(c){
+      var sel=(!S.query&&S.cat===c.id);
+      return '<button class="cat" role="tab" aria-selected="'+sel+'" data-act="cat" data-id="'+c.id+'">'
+       +'<span class="cat-ico">'+ic(c.icon)+'</span>'
+       +'<span class="cat-n">'+c.name+'</span>'
+       +'<span class="cat-count num">'+countOf(c.id)+'</span></button>';
+    }).join('')
+    +'</div>'
+  +'</aside>'
+  +'<section class="catalog">'
+    +'<div class="catalog-head">'
+      +'<div class="catalog-tools">'
+        +'<div class="search"><span class="s-ico">'+ic('search')+'</span>'
+        +'<input id="q" type="search" placeholder="Rechercher un plat…" value="'+esc(S.query)+'" aria-label="Rechercher un plat">'
+        +'<button class="icon-btn icon-btn-ghost icon-btn-sm s-clear'+(S.query?'':' hide')+'" data-act="clear-q" aria-label="Effacer la recherche">'+ic('x')+'</button>'
+        +'</div>'
+        +'<button class="btn btn-secondary" data-act="filters">'+ic('filter')+'Filtres'
+        +(S.filters.length?' <span class="badge badge-pop num">'+S.filters.length+'</span>':'')+'</button>'
+      +'</div>'
+      +'<div class="catalog-title-row">'
+        +'<div><span class="t-eyebrow">'+(S.query?'Recherche':'Catégorie')+'</span>'
+        +'<h1 class="t-h2 mt2">'+(S.query?'« '+esc(S.query)+' »':catName(S.cat))+'</h1></div>'
+        +'<span class="t-sm num">'+filteredProducts().length+' plat'+(filteredProducts().length>1?'s':'')+'</span>'
+      +'</div>'
+    +'</div>'
+    +'<div class="catalog-body scroll" id="catalogBody">'+catalogBody()+'</div>'
+  +'</section>'
+  +cartPanelHTML()
+  +'<button class="cart-fab'+(cartCount()?'':' hide')+'" data-act="toggle-cart">'+ic('bag')
+    +'<span>'+eur(cartSubtotal())+'</span>'
+    +'<span class="cf-count num">'+cartCount()+'</span></button>'
+  +'</div>';
+}
+
+function catalogBody(){
+ if(S.netError){
+  return '<div class="empty"><div class="empty-ill">'+ic('wifiOff')+'</div>'
+   +'<h2 class="t-h2">Impossible de charger la carte</h2>'
+   +'<p class="t-lead" style="max-width:460px">Vérifiez votre connexion ou réessayez dans quelques instants.</p>'
+   +'<button class="btn btn-primary btn-lg mt3" data-act="retry-menu">'+ic('refresh')+'Réessayer</button></div>';
+ }
+ if(S.loading){
+  return '<div class="row gap3 acenter" style="margin-bottom:20px"><span class="spinner"></span>'
+   +'<span class="t-sm">Chargement de la carte…</span></div>'
+   +'<div class="grid-products">'+skeletonGrid(9)+'</div>';
+ }
+ var list=filteredProducts();
+ if(!list.length){
+  return '<div class="empty"><div class="empty-ill">'+ic('search')+'</div>'
+   +'<h2 class="t-h2">Aucun plat ne correspond</h2>'
+   +'<p class="t-lead" style="max-width:440px">Essayez un autre mot ou retirez les filtres pour voir toute la carte.</p>'
+   +'<button class="btn btn-secondary btn-lg mt3" data-act="reset-search">Voir toute la carte</button></div>';
+ }
+ return '<div class="grid-products">'+list.map(productCard).join('')+'</div>';
+}
+
+/* ---------- ÉCRAN 4 — PANIER SIDEBAR ---------- */
+function cartLineHTML(l){
+ var p=prod(l.pid),o=optsLabel(l);
+ return '<div class="c-item" data-line="'+l.id+'">'
+  +'<div class="c-top"><div class="c-thumb">'+dishArt(p.art)+'</div>'
+  +'<div class="grow"><div class="c-name">'+esc(p.name)+'</div>'
+  +(o?'<div class="c-opts">'+esc(o)+'</div>':'')
+  +(l.note?'<div class="c-note">'+ic('note')+'<span>'+esc(l.note)+'</span></div>':'')
+  +'</div>'
+  +'<span class="t-price">'+eur(lineTotal(l))+'</span></div>'
+  +'<div class="c-bottom">'+qtyHTML(l.id,l.qty,{size:'qty-sm',trash:true})
+  +'<button class="c-edit" data-act="edit-line" data-id="'+l.id+'">Modifier</button></div>'
+  +'</div>';
+}
+
+function cartPanelHTML(){
+ var n=cartCount(),sub=cartSubtotal();
+ var body;
+ if(!n){
+  body='<div class="empty" style="padding:var(--s7) var(--s5)"><div class="empty-ill">'+ic('bag')+'</div>'
+   +'<h3 class="t-h3">Votre panier est vide</h3>'
+   +'<p class="t-sm" style="max-width:260px">Découvrez notre carte et ajoutez vos premiers plats.</p>'
+   +'<button class="btn btn-secondary mt3" data-act="nav" data-to="menu">Voir la carte</button></div>';
+ }else{
+  body=S.cart.map(cartLineHTML).join('');
+ }
+ return '<aside class="cart '+(S.cartOpen?'is-open':'')+'" id="cartPanel" aria-label="Votre commande">'
+  +'<div class="cart-head"><div><span class="t-eyebrow">Table '+S.table+'</span>'
+    +'<h2 class="t-h3 mt2">Votre commande</h2></div>'
+    +(n?'<span class="badge num" aria-label="'+n+' articles">'+n+' art.</span>':'')
+    +'<button class="icon-btn icon-btn-ghost icon-btn-sm cart-fab-close hide" data-act="toggle-cart" aria-label="Fermer">'+ic('x')+'</button>'
+  +'</div>'
+  +'<div class="cart-items scroll">'+body+'</div>'
+  +(n?'<div class="cart-foot">'
+    +'<div class="totals">'
+      +'<div class="trow"><span>Sous-total</span><b>'+eur(sub-optionsTotal())+'</b></div>'
+      +'<div class="trow"><span>Suppléments</span><b>'+eur(optionsTotal())+'</b></div>'
+      +'<div class="trow trow-total"><span>Total</span><b>'+eur(sub)+'</b></div>'
+    +'</div>'
+    +'<button class="btn btn-primary btn-block cart-cta" data-act="nav" data-to="cart">'
+    +'<span>Voir ma commande</span><span class="num">'+eur(sub)+'</span></button>'
+   +'</div>':'')
+  +'</aside>';
+}
+function optionsTotal(){
+ return S.cart.reduce(function(a,l){
+  return a+(l.opts||[]).reduce(function(b,o){return b+(o.price||0);},0)*l.qty;},0);
+}
+
+/* Mise à jour ciblée (perçue comme instantanée) */
+function refreshCart(){
+ var old=$('#cartPanel');
+ if(old){
+  var d=document.createElement('div');d.innerHTML=cartPanelHTML();
+  old.replaceWith(d.firstElementChild);
+ }
+ var fab=$('.cart-fab');
+ if(fab)fab.innerHTML=ic('bag')+'<span>'+eur(cartSubtotal())+'</span><span class="cf-count num">'+cartCount()+'</span>';
+ renderTopbar();
+}
+function refreshCatalog(){
+ var b=$('#catalogBody');
+ if(b)b.innerHTML=catalogBody();
+}
+
+/* ---------- PANIER : opérations ---------- */
+function sig(pid,opts,note){
+ return pid+'|'+(opts||[]).map(function(o){return o.gid+':'+o.cid;}).sort().join(',')+'|'+(note||'').trim();
+}
+function addToCart(pid,opts,note,qty){
+ var s=sig(pid,opts,note),found=null;
+ S.cart.forEach(function(l){if(sig(l.pid,l.opts,l.note)===s)found=l;});
+ if(found){found.qty+=(qty||1);}
+ else{S.cart.push({id:uid(),pid:pid,opts:opts||[],note:note||'',qty:qty||1});}
+}
+function defaultOpts(p){
+ var out=[],ok=true;
+ (p.options||[]).forEach(function(g){
+  if(g.type==='single'){
+   var d=g.choices.filter(function(c){return c.def;})[0]||(g.required?g.choices[0]:null);
+   if(d)out.push({gid:g.id,cid:d.id,label:d.label,price:d.price||0});
+  }else if(g.required){ok=false;}
+ });
+ return ok?out:null;
+}
+function quickAdd(id,btn){
+ var p=prod(id);if(!p||p.out)return false;
+ var o=defaultOpts(p);
+ if(o===null){openProduct(id);return false;}
+ addToCart(id,o,'',1);
+ if(btn){
+  var prev=btn.innerHTML;
+  btn.classList.add('is-added');btn.innerHTML=ic('check')+' Ajouté';
+  setTimeout(function(){btn.classList.remove('is-added');btn.innerHTML=prev;},1100);
+ }
+ refreshCart();
+ var card=btn&&btn.closest('.p-card');
+ if(card){var b=card.querySelector('.p-incart');
+  if(b){b.textContent=inCartQty(id);b.classList.remove('q-bump');void b.offsetWidth;b.classList.add('q-bump');}
+  else{var m=card.querySelector('.p-media');
+   if(m){var s=document.createElement('span');s.className='p-incart num q-bump';s.textContent=inCartQty(id);m.appendChild(s);}}}
+ return true;
+}
+function changeQty(lineId,delta){
+ var idx=-1;S.cart.forEach(function(l,i){if(l.id===lineId)idx=i;});
+ if(idx<0)return;
+ var l=S.cart[idx];
+ l.qty+=delta;
+ if(l.qty<=0){S.cart.splice(idx,1);toast('Plat retiré de votre commande');}
+ if(S.route==='cart'){render();}else{refreshCart();refreshCatalog();}
+}
+
+/* ---------- ÉCRAN 3 — FICHE PRODUIT ---------- */
+var PD=null; /* état de la fiche ouverte */
+function openProduct(id,lineId){
+ var p=prod(id);if(!p)return;
+ var line=lineId?S.cart.filter(function(l){return l.id===lineId;})[0]:null;
+ PD={pid:id,lineId:lineId||null,qty:line?line.qty:1,note:line?line.note:'',sel:{}};
+ (p.options||[]).forEach(function(g){
+  PD.sel[g.id]=[];
+  if(line){line.opts.forEach(function(o){if(o.gid===g.id)PD.sel[g.id].push(o.cid);});}
+  else if(g.type==='single'){
+   var d=g.choices.filter(function(c){return c.def;})[0];
+   if(d)PD.sel[g.id]=[d.id];
+  }
+ });
+ layer('<div class="drawer-wrap" data-overlay><div class="drawer" role="dialog" aria-modal="true" id="pdDrawer">'+productSheetHTML()+'</div></div>');
+}
+function pdPrice(){
+ var p=prod(PD.pid),t=p.price;
+ (p.options||[]).forEach(function(g){
+  (PD.sel[g.id]||[]).forEach(function(cid){
+   g.choices.forEach(function(c){if(c.id===cid)t+=c.price||0;});});});
+ return t*PD.qty;
+}
+function pdValid(){
+ var p=prod(PD.pid),ok=true;
+ (p.options||[]).forEach(function(g){if(g.required&&!(PD.sel[g.id]||[]).length)ok=false;});
+ return ok;
+}
+function productSheetHTML(){
+ var p=prod(PD.pid);
+ var groups=(p.options||[]).map(function(g){
+  return '<div class="opt-group">'
+   +'<div class="opt-head"><h3 class="t-h3">'+g.label+'</h3>'
+   +'<span class="'+(g.required?'opt-req':'opt-opt')+'">'+(g.required?'Obligatoire':'Facultatif')+'</span></div>'
+   +'<div class="opt-list" role="group">'
+   +g.choices.map(function(c){
+     var on=(PD.sel[g.id]||[]).indexOf(c.id)>=0;
+     return '<button class="opt" role="'+(g.type==='single'?'radio':'checkbox')+'" aria-checked="'+on+'"'
+      +' data-act="opt" data-g="'+g.id+'" data-c="'+c.id+'" data-type="'+g.type+'">'
+      +'<span class="opt-mark '+(g.type==='multi'?'opt-sq':'')+'">'+ic('check')+'</span>'
+      +'<span class="opt-lbl">'+esc(c.label)+'</span>'
+      +(c.price?'<span class="opt-price">+ '+eur(c.price)+'</span>':'')
+      +'</button>';
+   }).join('')
+   +'</div></div>';
+ }).join('');
+
+ return '<div class="pd-media">'+dishArt(p.art,p.id)
+  +'<button class="icon-btn pd-close" data-act="close-layer" aria-label="Fermer la fiche">'+ic('x')+'</button>'
+  +(p.badges&&p.badges.length?'<span class="pd-badges">'+badgesHTML(p.badges,3)+'</span>':'')
+  +'</div>'
+ +'<div class="pd-body scroll">'
+   +'<div>'
+     +'<div class="pd-title-row"><h1 class="t-h1">'+esc(p.name)+'</h1><span class="t-price" style="font-size:26px">'+eur(p.price)+'</span></div>'
+     +'<p class="t-lead mt3">'+esc(p.desc)+'</p>'
+   +'</div>'
+   +'<div class="stack gap3"><span class="t-eyebrow">Ingrédients</span><p class="t-body">'+esc(p.ing)+'</p></div>'
+   +'<div class="stack gap3"><span class="t-eyebrow">Allergènes</span>'
+     +(p.aller&&p.aller.length
+       ?'<div class="allergen-row">'+p.aller.map(function(a){return '<span class="chip chip-allergen">'+esc(a)+'</span>';}).join('')+'</div>'
+       :'<p class="t-body">Aucun allergène majeur déclaré pour ce plat.</p>')
+     +'<div class="notice">'+ic('shield')+'<div>Pour toute allergie sévère, merci de demander confirmation à notre équipe avant de commander.</div></div>'
+   +'</div>'
+   +groups
+   +'<div class="field"><label class="field-label" for="pdNote">Une remarque pour la cuisine ?</label>'
+     +'<textarea class="textarea" id="pdNote" placeholder="Par exemple : « Sans oignon »" maxlength="140">'+esc(PD.note)+'</textarea>'
+     +'<div class="field-hint">Facultatif — la cuisine en tiendra compte si possible.</div></div>'
+ +'</div>'
+ +'<div class="pd-foot">'
+   +(p.out
+     ? '<div class="notice notice-danger grow">'+ic('info')+'<div><b>Indisponible actuellement.</b> Ce plat reviendra très vite à la carte.</div></div>'
+     : qtyHTML('pd',PD.qty,{})
+       +'<button class="btn btn-primary btn-lg btn-split grow" data-act="'+(PD.lineId?'update-line':'add-to-cart')+'" '+(pdValid()?'':'aria-disabled="true"')+'>'
+       +'<span>'+(PD.lineId?'Mettre à jour':'Ajouter au panier')+'</span><span class="num">'+eur(pdPrice())+'</span></button>')
+ +'</div>';
+}
+function refreshProductSheet(){
+ var d=$('#pdDrawer');if(!d)return;
+ var scroll=d.querySelector('.pd-body').scrollTop;
+ var note=d.querySelector('#pdNote');if(note)PD.note=note.value;
+ d.innerHTML=productSheetHTML();
+ d.querySelector('.pd-body').scrollTop=scroll;
+}
+function pdSelectedOpts(){
+ var p=prod(PD.pid),out=[];
+ (p.options||[]).forEach(function(g){
+  (PD.sel[g.id]||[]).forEach(function(cid){
+   g.choices.forEach(function(c){if(c.id===cid)out.push({gid:g.id,cid:c.id,label:c.label,price:c.price||0});});});});
+ return out;
+}
+
+/* ---------- ÉCRAN 5 — PANIER COMPLET ---------- */
+function cartFullLine(l){
+ var p=prod(l.pid),o=optsLabel(l);
+ return '<div class="cf-item">'
+  +'<div class="cf-thumb">'+dishArt(p.art,p.id)+'</div>'
+  +'<div class="cf-main">'
+    +'<div class="row between gap4 acenter"><h3 class="t-h3">'+esc(p.name)+'</h3>'
+    +'<span class="t-price">'+eur(lineTotal(l))+'</span></div>'
+    +(o?'<p class="t-sm">'+esc(o)+'</p>':'')
+    +(l.note?'<div class="c-note" style="align-self:flex-start">'+ic('note')+'<span>'+esc(l.note)+'</span></div>':'')
+    +'<div class="row gap3 mt2">'
+      +'<button class="btn btn-tertiary btn-sm" data-act="edit-line" data-id="'+l.id+'">'+ic('pencil')+'Modifier</button>'
+      +'<button class="btn btn-tertiary btn-sm" data-act="del-line" data-id="'+l.id+'" style="color:var(--danger)">'+ic('trash')+'Supprimer</button>'
+    +'</div>'
+  +'</div>'
+  +'<div class="cf-actions">'+qtyHTML(l.id,l.qty,{})+'</div>'
+ +'</div>';
+}
+function screenCart(){
+ var sub=cartSubtotal();
+ if(!S.cart.length){
+  return '<div class="page"><div class="page-head">'
+   +'<button class="icon-btn" data-act="nav" data-to="menu" aria-label="Retour à la carte">'+ic('arrL')+'</button>'
+   +'<h1 class="t-h2">Ma commande</h1></div>'
+   +'<div class="page-body"><div class="empty">'
+   +'<div class="empty-ill">'+ic('bag')+'</div>'
+   +'<h2 class="t-h1">Votre panier est vide</h2>'
+   +'<p class="t-lead" style="max-width:480px">Découvrez notre carte et ajoutez vos premiers plats. Tout part en cuisine dès que vous validez.</p>'
+   +'<button class="btn btn-primary btn-xl mt4" data-act="nav" data-to="menu">'+ic('book')+'Voir la carte</button>'
+   +(S.orders.length?'<button class="btn btn-tertiary mt3" data-act="nav" data-to="order-status">Suivre ma commande en cours</button>':'')
+   +'</div></div></div>';
+ }
+ return '<div class="page">'
+ +'<div class="page-head">'
+   +'<button class="icon-btn" data-act="nav" data-to="menu" aria-label="Retour à la carte">'+ic('arrL')+'</button>'
+   +'<div class="grow"><span class="t-eyebrow">Table '+S.table+'</span><h1 class="t-h2 mt2">Ma commande</h1></div>'
+   +'<span class="badge num">'+cartCount()+' article'+(cartCount()>1?'s':'')+'</span>'
+ +'</div>'
+ +'<div class="page-body scroll"><div class="wrap"><div class="cart-full">'
+   +'<div class="stack gap4">'
+     +S.cart.map(cartFullLine).join('')
+     +'<div class="card card-pad mt3">'
+       +'<h3 class="t-h3">Une demande particulière ?</h3>'
+       +'<p class="t-sm mt2">Allergie, cuisson, plats à servir en même temps… Notre équipe en tiendra compte.</p>'
+       +'<textarea class="textarea mt4" id="orderNote" placeholder="Ajouter une remarque pour l’ensemble de la commande" maxlength="240">'+esc(S.orderNote)+'</textarea>'
+     +'</div>'
+     +'<button class="btn btn-tertiary" data-act="nav" data-to="menu">'+ic('plus')+'Ajouter d’autres plats</button>'
+   +'</div>'
+   +'<div class="summary-sticky"><div class="panel card-pad">'
+     +'<h3 class="t-h3">Récapitulatif</h3>'
+     +'<div class="totals mt5">'
+       +'<div class="trow"><span>Sous-total</span><b>'+eur(sub-optionsTotal())+'</b></div>'
+       +'<div class="trow"><span>Suppléments</span><b>'+eur(optionsTotal())+'</b></div>'
+       +'<div class="trow"><span>Service</span><b>Compris</b></div>'
+       +'<div class="trow trow-total"><span>Total</span><b>'+eur(sub)+'</b></div>'
+     +'</div>'
+     +'<button class="btn btn-primary btn-lg btn-block btn-split mt6" style="--btn-h:74px" data-act="confirm-order">'
+       +'<span>Confirmer la commande</span><span class="num">'+eur(sub)+'</span></button>'
+     +'<p class="t-sm center mt4">Votre commande part directement en cuisine. Le paiement se fait en fin de repas.</p>'
+   +'</div></div>'
+ +'</div></div></div></div>';
+}
+
+/* ---------- ÉCRAN 6 — CONFIRMATION DE COMMANDE ---------- */
+function screenOrderSent(){
+ var o=S.orders[S.orders.length-1];
+ return '<div class="page"><div class="page-body scroll"><div class="success">'
+  +'<div class="success-mark">'+ic('check')+'</div>'
+  +'<h1 class="t-h1">Commande envoyée !</h1>'
+  +'<p class="t-lead" style="max-width:520px">Votre commande a bien été transmise en cuisine.</p>'
+  +'<div class="ticket mt4">'
+    +'<div class="ticket-row"><span class="tk-k">Commande</span><span class="tk-v code-big">#'+o.no+'</span></div>'
+    +'<div class="ticket-row"><span class="tk-k">Table</span><span class="tk-v">Table '+S.table+'</span></div>'
+    +'<div class="ticket-row"><span class="tk-k">Articles</span><span class="tk-v num">'+o.count+'</span></div>'
+    +'<div class="ticket-row"><span class="tk-k">Temps d’attente estimé</span><span class="tk-v">environ '+o.eta+' min</span></div>'
+    +'<div class="ticket-row"><span class="tk-k">Total</span><span class="tk-v num">'+eur(o.total)+'</span></div>'
+  +'</div>'
+  +'<div class="row gap4 mt6 wrapf" style="justify-content:center">'
+    +'<button class="btn btn-secondary btn-lg" data-act="nav" data-to="menu">'+ic('book')+'Retour à la carte</button>'
+    +'<button class="btn btn-primary btn-lg" data-act="nav" data-to="order-status">'+ic('receipt')+'Voir ma commande</button>'
+  +'</div>'
+ +'</div></div></div>';
+}
+
+/* ---------- COMMANDE EN COURS ---------- */
+var STATUS=[{k:'sent',l:'Commande envoyée',i:'send'},{k:'prep',l:'En préparation',i:'flame'},{k:'served',l:'Prête / servie',i:'checkC'}];
+function screenOrderStatus(){
+ if(!S.orders.length)return screenCart();
+ return '<div class="page">'
+ +'<div class="page-head">'
+   +'<button class="icon-btn" data-act="nav" data-to="menu" aria-label="Retour à la carte">'+ic('arrL')+'</button>'
+   +'<div class="grow"><span class="t-eyebrow">Table '+S.table+'</span><h1 class="t-h2 mt2">Votre commande</h1></div>'
+ +'</div>'
+ +'<div class="page-body scroll"><div class="wrap wrap-narrow stack gap6">'
+ +S.orders.slice().reverse().map(function(o){
+   var si=STATUS.map(function(s){return s.k;}).indexOf(o.status);
+   return '<div class="panel card-pad stack gap6">'
+    +'<div class="row between acenter gap4 wrapf">'
+      +'<div><span class="t-eyebrow">Commande</span><h2 class="t-h1 mt2">#'+o.no+'</h2></div>'
+      +'<div class="stack gap2" style="align-items:flex-end">'
+        +'<span class="badge '+(o.status==='served'?'badge-veg':'badge-pop')+'">'+STATUS[si].l+'</span>'
+        +'<span class="t-sm">'+(o.status==='served'?'Bon appétit !':'Temps estimé : environ '+o.eta+' min')+'</span>'
+      +'</div>'
+    +'</div>'
+    +'<div class="timeline">'+STATUS.map(function(s,i){
+      var cls=i<si?'is-done':(i===si?'is-current':'');
+      return '<div class="tl-step '+cls+'"><div class="tl-bar"></div><div class="tl-dot">'+ic(s.i)+'</div>'
+       +'<div class="tl-lbl">'+s.l+'</div>'
+       +'<div class="tl-sub">'+(i<si?'Fait':(i===si?'En cours':'À venir'))+'</div></div>';
+     }).join('')+'</div>'
+    +'<div class="stack gap3" style="border-top:1px solid var(--line);padding-top:20px">'
+      +o.lines.map(function(l){var p=prod(l.pid);
+        return '<div class="row between gap4 acenter"><div class="row gap3 acenter">'
+         +'<span class="badge num">'+l.qty+'×</span><div><b style="color:var(--ink)">'+esc(p.name)+'</b>'
+         +(optsLabel(l)?'<div class="t-sm">'+esc(optsLabel(l))+'</div>':'')+'</div></div>'
+         +'<span class="num" style="font-weight:700">'+eur(lineTotal(l))+'</span></div>';}).join('')
+      +(o.note?'<div class="c-note mt2">'+ic('note')+'<span>'+esc(o.note)+'</span></div>':'')
+      +'<div class="row between mt3" style="border-top:1px dashed var(--line-strong);padding-top:14px">'
+      +'<b class="t-h3">Total</b><b class="t-h3 num">'+eur(o.total)+'</b></div>'
+    +'</div>'
+   +'</div>';
+  }).join('')
+ +'<div class="row gap4 wrapf">'
+   +'<button class="btn btn-primary btn-lg grow" data-act="nav" data-to="menu">'+ic('plus')+'Commander autre chose</button>'
+   +'<button class="btn btn-secondary btn-lg" data-act="help">'+ic('help')+'Besoin d’aide ?</button>'
+ +'</div>'
+ +'<p class="t-sm center">Une nouvelle commande n’efface pas la précédente : elle s’ajoute à votre table.</p>'
+ +'</div></div></div>';
+}
+
+function doConfirmOrder(btn){
+ if(btn){btn.classList.add('is-loading');}
+ setTimeout(function(){
+  if(S.orderError){
+   if(btn)btn.classList.remove('is-loading');
+   modal({title:'Votre commande n’a pas pu être envoyée',
+    sub:'Aucun paiement ou commande supplémentaire n’a été enregistré. Vous pouvez réessayer sans risque de doublon.',
+    body:'<div class="notice notice-danger">'+ic('alert')+'<div>La liaison avec la cuisine a été interrompue. Votre panier est intact.</div></div>',
+    foot:'<button class="btn btn-secondary grow" data-act="close-layer">Plus tard</button>'
+      +'<button class="btn btn-primary grow" data-act="retry-order">'+ic('refresh')+'Réessayer</button>'});
+   return;
+  }
+  var total=cartSubtotal();
+  S.orders.push({no:S.nextOrderNo++,lines:S.cart.slice(),note:S.orderNote,total:total,
+    count:cartCount(),eta:15,status:'sent',t:Date.now()});
+  S.cart=[];S.orderNote='';
+  S.route='order-sent';render();
+  /* progression réaliste du statut */
+  var o=S.orders[S.orders.length-1];
+  setTimeout(function(){o.status='prep';if(S.route==='order-status')render();},9000);
+  setTimeout(function(){o.status='served';if(S.route==='order-status')render();},26000);
+ },900);
+}
+
+/* ==========================================================================
+   RÉSERVATION
+   ========================================================================== */
+const RES_STEPS=['Personnes','Date','Horaire','Coordonnées','Confirmation'];
+function resProgressIndex(){var m={0:0,1:1,2:1,3:2,4:2,5:3,6:4};return m[S.res.step]||0;}
+function hashN(s){var h=0;for(var i=0;i<s.length;i++){h=(h*31+s.charCodeAt(i))>>>0;}return h%100;}
+const SLOTS_MIDI=['11:45','12:00','12:15','12:30','12:45','13:00','13:15','13:30','13:45','14:00'];
+const SLOTS_SOIR=['19:00','19:15','19:30','19:45','20:00','20:15','20:30','20:45','21:00','21:15','21:30'];
+function slotState(iso,t){
+ var h=hashN(iso+t+S.res.people);
+ if(h<14)return 'none';
+ if(h<34)return 'tight';
+ return 'ok';
+}
+function fmtPhone(v){return v.replace(/(\d{2})(?=\d)/g,'$1 ').trim();}
+
+function resHeader(){
+ var idx=resProgressIndex();
+ return '<div class="res-head">'
+  +'<button class="icon-btn" data-act="res-back" aria-label="Étape précédente">'+ic('arrL')+'</button>'
+  +'<div class="stepper grow">'+RES_STEPS.map(function(l,i){
+    var cls=i<idx?'is-done':(i===idx?'is-current':'');
+    return (i?'<span class="step-sep"></span>':'')
+     +'<div class="step '+cls+'"><span class="step-bullet">'+(i<idx?ic('check'):(i+1))+'</span>'
+     +'<span class="step-lbl">'+l+'</span></div>';
+   }).join('')+'</div>'
+  +'<button class="btn btn-tertiary" data-act="res-cancel">Annuler</button>'
+ +'</div>';
+}
+function resFoot(nextLabel,enabled,hint){
+ return '<div class="res-foot">'
+  +'<span class="t-sm">'+(hint||'Vous pouvez revenir en arrière à tout moment.')+'</span>'
+  +'<button class="btn btn-primary btn-xl" data-act="res-next" '+(enabled?'':'aria-disabled="true"')+'>'
+  +nextLabel+ic('arrR')+'</button></div>';
+}
+
+/* Récapitulatif vivant, à droite : le client voit sa réservation se construire */
+function resSide(){
+ var r=S.res;
+ var rows=[
+  ['users','Personnes',r.people?(r.people>=7?'7 ou plus':r.people+(r.people>1?' personnes':' personne')):null],
+  ['calendar','Date',r.when==='now'?'Aujourd’hui':(r.step>=2&&r.date?fmtDateLong(r.date):null)],
+  ['clock','Horaire',r.when==='now'?'Dès maintenant':(r.time||null)],
+  ['pin','Préférence',r.step>=4?({none:'Aucune préférence',salle:'Salle',calme:'Coin calme',pmr:'Accessible PMR'})[r.pref]:null],
+  ['user','Au nom de',r.name||null]
+ ];
+ return '<aside class="res-side">'
+  +'<div class="panel">'
+    +'<div class="row between acenter" style="margin-bottom:8px">'
+    +'<span class="t-eyebrow">Votre réservation</span>'
+    +'<span class="brand-sun" style="width:22px;height:22px"></span></div>'
+    +rows.map(function(x){
+      return '<div class="side-row '+(x[2]?'':'is-todo')+'" data-side="'+x[1]+'"><span class="sr-ico">'+ic(x[0])+'</span>'
+       +'<div class="grow"><div class="sr-k">'+x[1]+'</div><div class="sr-v">'+esc(x[2]||'À choisir')+'</div></div></div>';
+     }).join('')
+  +'</div>'
+  +'<div class="notice notice-info">'+ic('info')+'<div>Service du midi 11:45–14:30 · Service du soir 19:00–22:30. Fermé le lundi.</div></div>'
+  +(S.res.step>=5?'<div class="notice">'+ic('lock')+'<div>Tablette partagée : vos coordonnées sont effacées dès la fin de votre réservation.</div></div>':'')
+ +'</aside>';
+}
+
+function screenReserve(){
+ if(!S.res)S.res=newRes();
+ var r=S.res,body='',foot='';
+
+ if(r.step===0){
+  body='<div class="res-main">'
+   +'<div class="stack gap3"><span class="t-eyebrow">Réservation</span>'
+   +'<h1 class="t-h1">Combien serez-vous ?</h1>'
+   +'<p class="t-lead">Sélectionnez le nombre de personnes à table.</p></div>'
+   +'<div class="pick-grid">'
+   +[1,2,3,4,5,6].map(function(n){
+     return '<button class="pick" data-act="res-people" data-n="'+n+'" aria-pressed="'+(r.people===n)+'">'
+      +'<b class="num">'+n+'</b><span>'+(n>1?'personnes':'personne')+'</span></button>';}).join('')
+   +'<button class="pick pick-wide" data-act="res-people" data-n="7" aria-pressed="'+(r.people>=7)+'">'
+   +'<b>7 personnes ou +</b><span>Nous vous rappellerons</span></button>'
+   +'<button class="pick pick-wide" data-act="help"><b>Un besoin particulier ?</b><span>Demander l’équipe</span></button>'
+   +'</div></div>';
+  foot=resFoot('Continuer',true,'Vous pourrez ajuster le nombre de personnes à l’étape suivante.');
+ }
+
+ else if(r.step===1){
+  var status=S.full
+   ? '<span class="bc-status is-full">'+ic('alertC')+'Restaurant complet · ≈ 20 min d’attente</span>'
+   : (r.people>=5
+     ? '<span class="bc-status is-wait">'+ic('clock')+'Environ 10 min d’attente</span>'
+     : '<span class="bc-status">'+ic('checkC')+'Table disponible immédiatement</span>');
+  body='<div class="res-main">'
+   +'<div class="stack gap3"><span class="t-eyebrow">'+r.people+' '+(r.people>1?'personnes':'personne')+'</span>'
+   +'<h1 class="t-h1">Quand souhaitez-vous venir ?</h1></div>'
+   +'<div class="big-choice">'
+     +'<button class="bc" data-act="res-when" data-w="now" aria-pressed="'+(r.when==='now')+'">'
+       +'<span class="bc-ico">'+ic('sun')+'</span><b>Maintenant</b>'
+       +'<p>Trouver une table maintenant, sans attendre.</p>'+status+'</button>'
+     +'<button class="bc" data-act="res-when" data-w="later" aria-pressed="'+(r.when==='later')+'">'
+       +'<span class="bc-ico">'+ic('calendar')+'</span><b>Plus tard</b>'
+       +'<p>Réserver pour une autre heure ou un autre jour.</p>'
+       +'<span class="bc-status" style="background:var(--cream);color:var(--ink-2)">'+ic('clock')+'Choisir date et horaire</span></button>'
+   +'</div></div>';
+  foot=resFoot('Continuer',!!r.when,'Choisissez « Maintenant » si vous êtes déjà sur place.');
+ }
+
+ else if(r.step===2){
+  var quick=[0,1,2,3].map(function(i){
+   var iso=addDays(todayISO(),i);
+   var lbl=i===0?'Aujourd’hui':(i===1?'Demain':fmtDateShort(iso));
+   var d=parseISO(iso);
+   return '<button class="dq" data-act="res-date" data-d="'+iso+'" aria-pressed="'+(r.date===iso)+'">'
+    +'<small>'+(i<2?lbl:DOW_S[d.getDay()])+'</small><b class="num">'+d.getDate()+'</b>'
+    +'<span>'+MON[d.getMonth()].slice(0,4)+'.</span></button>';}).join('');
+  body='<div class="res-main">'
+   +'<div class="stack gap3"><span class="t-eyebrow">Étape 2</span>'
+   +'<h1 class="t-h1">Quel jour ?</h1><p class="t-lead">Choisissez une date rapide ou ouvrez le calendrier.</p></div>'
+   +'<div class="date-quick">'+quick
+   +'<button class="dq" data-act="open-cal" style="min-width:150px"><small>Autre</small>'
+   +'<b style="font-size:20px">'+ic('calendar')+'</b><span>Calendrier</span></button></div>'
+   +'<div class="notice notice-info">'+ic('info')+'<div>Date sélectionnée : <b>'+fmtDateLong(r.date)+'</b></div></div>'
+   +'</div>';
+  foot=resFoot('Continuer',!!r.date,'Réservations possibles jusqu’à 60 jours à l’avance.');
+ }
+
+ else if(r.step===3){
+  var svc=r.service||(new Date().getHours()<16?'midi':'soir');
+  r.service=svc;
+  var slots=svc==='midi'?SLOTS_MIDI:SLOTS_SOIR;
+  body='<div class="res-main">'
+   +'<div class="row between acenter gap4 wrapf">'
+     +'<div class="stack gap3"><span class="t-eyebrow">'+fmtDateLong(r.date)+' · '+r.people+' pers.</span>'
+     +'<h1 class="t-h1">Choisissez votre horaire</h1></div>'
+     +'<div class="service-tabs">'
+       +'<button class="nav-item" data-act="res-service" data-s="midi" aria-current="'+(svc==='midi')+'">Midi</button>'
+       +'<button class="nav-item" data-act="res-service" data-s="soir" aria-current="'+(svc==='soir')+'">Soir</button>'
+     +'</div>'
+   +'</div>'
+   +'<div class="slot-grid">'+slots.map(function(t){
+     var st=slotState(r.date,t);
+     return '<button class="slot '+(st==='tight'?'is-tight':'')+'" data-act="res-time" data-t="'+t+'"'
+      +(st==='none'?' disabled aria-disabled="true"':'')
+      +' aria-pressed="'+(r.time===t)+'"><b>'+t+'</b>'
+      +'<small>'+(st==='none'?'Complet':(st==='tight'?'Presque complet':'Disponible'))+'</small></button>';
+    }).join('')+'</div>'
+   +'<div class="row gap5 wrapf t-sm">'
+     +'<span class="row gap2 acenter"><i style="width:12px;height:12px;border-radius:3px;background:var(--ok);display:block"></i> Disponible</span>'
+     +'<span class="row gap2 acenter"><i style="width:12px;height:12px;border-radius:3px;background:var(--warn);display:block"></i> Presque complet</span>'
+     +'<span class="row gap2 acenter"><i style="width:12px;height:12px;border-radius:3px;background:var(--line-strong);display:block"></i> Indisponible</span>'
+   +'</div></div>';
+  foot=resFoot('Continuer',!!r.time,'Les horaires complets ne sont pas sélectionnables.');
+ }
+
+ else if(r.step===4){
+  var prefs=[{id:'none',l:'Aucune préférence',i:'checkC'},{id:'salle',l:'Salle',i:'utensils'},
+             {id:'calme',l:'Coin calme',i:'moon'},{id:'pmr',l:'Accessible PMR',i:'access'}];
+  body='<div class="res-main">'
+   +'<div class="stack gap3"><span class="t-eyebrow">Étape facultative</span>'
+   +'<h1 class="t-h1">Une préférence ?</h1></div>'
+   +'<div class="pick-grid">'+prefs.map(function(p){
+     return '<button class="pick pick-wide" data-act="res-pref" data-p="'+p.id+'" aria-pressed="'+(r.pref===p.id)+'">'
+      +'<span style="display:flex;align-items:center;gap:12px">'
+      +'<span style="width:40px;height:40px;border-radius:12px;background:rgba(0,0,0,.06);display:flex;align-items:center;justify-content:center">'+ic(p.i)+'</span>'
+      +'<b style="font-size:19px">'+p.l+'</b></span></button>';}).join('')+'</div>'
+   +'<div class="notice notice-info">'+ic('info')+'<div>Nous ferons notre maximum selon les disponibilités.</div></div>'
+   +'</div>';
+  foot=resFoot('Continuer',true,'Étape facultative : vous pouvez continuer sans rien choisir.');
+ }
+
+ else if(r.step===5){
+  body='<div class="res-main">'
+   +'<div class="stack gap3"><span class="t-eyebrow">Dernière étape</span>'
+   +'<h1 class="t-h1">À quel nom doit-on réserver ?</h1>'
+   +'<p class="t-lead">Nous ne demandons que le nécessaire. Aucun compte à créer.</p></div>'
+   +'<div class="field"><label class="field-label" for="resName">Prénom / nom</label>'
+   +'<input class="input input-lg" id="resName" value="'+esc(r.name)+'" placeholder="Teo" autocomplete="off" maxlength="40"></div>'
+   +'<div class="row gap6 wrapf" style="align-items:flex-start">'
+     +'<div class="stack gap4 grow" style="min-width:280px">'
+       +'<div class="field"><span class="field-label">Téléphone</span>'
+       +'<div class="phone-display '+(r.phone?'':'is-empty')+'" id="phoneOut">'
+       +(r.phone?fmtPhone(r.phone):'06 12 34 56 78')+'<i class="caret"></i></div>'
+       +'<div class="field-hint">Uniquement pour vous prévenir si votre table se libère plus tôt.</div></div>'
+       +'<button class="switch" role="switch" aria-checked="'+r.sms+'" data-act="res-sms">'
+       +'<span class="switch-track"></span><span><b style="color:var(--ink)">Recevoir ma confirmation par SMS</b>'
+       +'<br><span class="t-sm">Recommandé</span></span></button>'
+       +'<div class="notice">'+ic('lock')+'<div>Cette tablette est partagée : vos informations sont effacées dès la fin de votre réservation.</div></div>'
+     +'</div>'
+     +'<div class="keypad">'+[1,2,3,4,5,6,7,8,9].map(function(k){
+        return '<button class="key" data-act="key" data-k="'+k+'">'+k+'</button>';}).join('')
+       +'<button class="key key-fn" data-act="key" data-k="clear" aria-label="Tout effacer">C</button>'
+       +'<button class="key" data-act="key" data-k="0">0</button>'
+       +'<button class="key key-fn" data-act="key" data-k="del" aria-label="Effacer">'+ic('arrL')+'</button>'
+     +'</div>'
+   +'</div></div>';
+  foot=resFoot('Vérifier ma réservation',(r.name.trim().length>1&&r.phone.length>=10),'Aucun compte à créer. Nom et téléphone suffisent.');
+ }
+
+ else if(r.step===6){
+  var rows=[
+   {k:'Personnes',v:r.people+(r.people>=7?' ou plus':'')+' '+(r.people>1?'personnes':'personne'),i:'users',s:0},
+   {k:'Date',v:r.when==='now'?'Aujourd’hui':fmtDateLong(r.date),i:'calendar',s:2},
+   {k:'Horaire',v:r.time||'Dès maintenant',i:'clock',s:3},
+   {k:'Préférence',v:({none:'Aucune préférence',salle:'Salle',calme:'Coin calme',pmr:'Accessible PMR'})[r.pref],i:'pin',s:4},
+   {k:'Au nom de',v:r.name||'—',i:'user',s:5},
+   {k:'Téléphone',v:fmtPhone(r.phone)||'—',i:'phone',s:5}
+  ];
+  body='<div class="res-main">'
+   +'<div class="stack gap3"><span class="t-eyebrow">Presque terminé</span><h1 class="t-h1">Votre réservation</h1></div>'
+   +'<div class="recap">'
+     +'<div class="recap-head">'+ic('pin')+'<div><b style="font-size:19px">Restaurant Osaka</b>'
+     +'<div style="font-size:14px;opacity:.7">Cuisine japonaise · Sur place</div></div></div>'
+     +rows.map(function(x){
+       return '<div class="recap-row"><span class="recap-ico">'+ic(x.i)+'</span>'
+        +'<div class="grow"><div class="recap-k">'+x.k+'</div><div class="recap-v">'+esc(x.v)+'</div></div>'
+        +'<button class="btn btn-tertiary btn-sm" data-act="res-goto" data-s="'+x.s+'">'+ic('pencil')+'Modifier</button></div>';
+      }).join('')
+   +'</div>'
+   +(r.sms?'<div class="notice notice-info">'+ic('mail')+'<div>Une confirmation vous sera envoyée par SMS au '+esc(fmtPhone(r.phone))+'.</div></div>':'')
+   +'</div>';
+  foot='<div class="res-foot"><button class="btn btn-tertiary btn-lg" data-act="res-back">'+ic('arrL')+'Retour</button>'
+   +'<button class="btn btn-primary btn-xl" data-act="res-confirm">'+ic('check')+'Confirmer ma réservation</button></div>';
+ }
+
+ var single=(r.step===6);
+ return '<div class="page">'+resHeader()
+  +'<div class="res-body scroll"><div class="res-inner'+(single?' is-single':'')+'">'
+  +body+(single?'':resSide())+'</div></div>'+foot+'</div>';
+}
+
+/* Calendrier */
+var CAL={y:0,m:0};
+function openCalendar(){
+ var d=parseISO(S.res.date);CAL.y=d.getFullYear();CAL.m=d.getMonth();
+ modal({title:'Choisir une date',sub:'Nous acceptons les réservations jusqu’à 60 jours à l’avance.',
+  body:'<div id="calHost">'+calendarHTML()+'</div>',
+  foot:'<button class="btn btn-secondary grow" data-act="close-layer">Annuler</button>'
+   +'<button class="btn btn-primary grow" data-act="close-layer">Valider</button>'});
+}
+function calendarHTML(){
+ var first=new Date(CAL.y,CAL.m,1),start=(first.getDay()+6)%7,days=new Date(CAL.y,CAL.m+1,0).getDate();
+ var today=todayISO(),max=addDays(today,60);
+ var cells='';
+ for(var i=0;i<start;i++)cells+='<div class="cal-empty"></div>';
+ for(var d=1;d<=days;d++){
+  var iso=isoOf(new Date(CAL.y,CAL.m,d));
+  var dis=(iso<today||iso>max);
+  var closedDay=parseISO(iso).getDay()===1; /* fermé le lundi */
+  cells+='<button class="cal-day '+(iso===today?'is-today':'')+'" data-act="cal-day" data-d="'+iso+'"'
+   +((dis||closedDay)?' disabled':'')+' aria-pressed="'+(S.res.date===iso)+'">'
+   +'<span class="num">'+d+'</span>'+(!dis&&!closedDay&&hashN(iso)<30?'<i></i>':'')+'</button>';
+ }
+ return '<div class="cal">'
+  +'<div class="cal-head"><button class="icon-btn icon-btn-sm" data-act="cal-nav" data-n="-1" aria-label="Mois précédent">'+ic('chevL')+'</button>'
+  +'<span class="cal-month">'+MON[CAL.m]+' '+CAL.y+'</span>'
+  +'<button class="icon-btn icon-btn-sm" data-act="cal-nav" data-n="1" aria-label="Mois suivant">'+ic('chevR')+'</button></div>'
+  +'<div class="cal-dow">'+['lun','mar','mer','jeu','ven','sam','dim'].map(function(x){return '<span>'+x+'</span>';}).join('')+'</div>'
+  +'<div class="cal-grid">'+cells+'</div>'
+  +'<p class="t-sm mt4">'+ic('info',null)+' Fermé le lundi. Un point rouge indique une forte affluence.</p></div>';
+}
+
+/* Créneau qui vient d'être pris */
+var slotTakenShown=false;
+function slotJustTaken(t){
+ var alts=(S.res.service==='midi'?SLOTS_MIDI:SLOTS_SOIR)
+  .filter(function(x){return x!==t&&slotState(S.res.date,x)!=='none';}).slice(0,3);
+ modal({title:'Ce créneau vient d’être réservé',sub:'Quelqu’un a réservé '+t+' à l’instant. Voici les disponibilités les plus proches :',
+  body:'<div class="slot-grid">'+alts.map(function(x){
+    return '<button class="slot" data-act="res-time-alt" data-t="'+x+'"><b>'+x+'</b><small>Disponible</small></button>';}).join('')+'</div>',
+  foot:'<button class="btn btn-secondary btn-block" data-act="close-layer">Voir tous les horaires</button>'});
+}
+
+/* Confirmation de réservation */
+function screenResConfirmed(){
+ var r=S.lastRes;
+ return '<div class="page"><div class="page-body scroll"><div class="success">'
+  +'<div class="success-mark is-red">'+ic('check')+'</div>'
+  +'<h1 class="t-h1">Votre table est réservée !</h1>'
+  +'<div class="ticket mt4">'
+    +'<div class="ticket-row"><span class="tk-k">Quand</span><span class="tk-v">'+(r.when==='now'?'Aujourd’hui, dès maintenant':fmtDateLong(r.date)+' à '+r.time)+'</span></div>'
+    +'<div class="ticket-row"><span class="tk-k">Personnes</span><span class="tk-v num">'+r.people+'</span></div>'
+    +'<div class="ticket-row"><span class="tk-k">Au nom de</span><span class="tk-v">'+esc(r.name)+'</span></div>'
+    +'<div class="ticket-row"><span class="tk-k">Réservation</span><span class="tk-v code-big">'+r.code+'</span></div>'
+  +'</div>'
+  +'<p class="t-lead mt4">Nous vous attendons chez Osaka.</p>'
+  +(r.sms?'<p class="t-sm">'+ic('mail')+' Une confirmation vous a été envoyée par SMS.</p>':'')
+  +'<div class="row gap4 mt6 wrapf" style="justify-content:center">'
+    +'<button class="btn btn-tertiary btn-lg" data-act="res-modify">'+ic('pencil')+'Modifier</button>'
+    +'<button class="btn btn-tertiary btn-lg" data-act="res-cancel-confirmed" style="color:var(--danger)">'+ic('x')+'Annuler</button>'
+    +'<button class="btn btn-primary btn-xl" data-act="res-finish">Terminer</button>'
+  +'</div>'
+  +'<p class="t-sm mt4">'+ic('lock')+' Vos informations seront effacées de cette tablette dès que vous aurez terminé.</p>'
+ +'</div></div></div>';
+}
+
+/* ---------- RETROUVER UNE RÉSERVATION ---------- */
+var findPhone='';
+function screenFindRes(){
+ return '<div class="page">'
+ +'<div class="page-head"><button class="icon-btn" data-act="nav" data-to="home" aria-label="Retour à l’accueil">'+ic('arrL')+'</button>'
+ +'<h1 class="t-h2">Retrouver ma réservation</h1></div>'
+ +'<div class="page-body scroll"><div class="wrap wrap-narrow">'
+  +'<div class="stack gap3"><span class="t-eyebrow">Réservation existante</span>'
+  +'<h2 class="t-h1">Quel est votre numéro de téléphone ?</h2>'
+  +'<p class="t-lead">Nous retrouverons votre réservation en un instant.</p></div>'
+  +'<div class="row gap7 mt6 wrapf" style="align-items:flex-start">'
+    +'<div class="stack gap4 grow" style="min-width:300px">'
+      +'<div class="phone-display '+(findPhone?'':'is-empty')+'" id="phoneOut">'
+      +(findPhone?fmtPhone(findPhone):'06 12 34 56 78')+'<i class="caret"></i></div>'
+      +'<button class="btn btn-primary btn-xl btn-block" data-act="do-find" '+(findPhone.length>=10?'':'aria-disabled="true"')+'>'
+      +ic('search')+'Retrouver ma réservation</button>'
+      +'<div class="notice">'+ic('lock')+'<div>Aucune information ne reste affichée sur cette tablette une fois votre réservation traitée.</div></div>'
+    +'</div>'
+    +'<div class="keypad">'+[1,2,3,4,5,6,7,8,9].map(function(k){
+       return '<button class="key" data-act="key" data-k="'+k+'" data-target="find">'+k+'</button>';}).join('')
+      +'<button class="key key-fn" data-act="key" data-k="clear" data-target="find">C</button>'
+      +'<button class="key" data-act="key" data-k="0" data-target="find">0</button>'
+      +'<button class="key key-fn" data-act="key" data-k="del" data-target="find" aria-label="Effacer">'+ic('arrL')+'</button>'
+    +'</div>'
+  +'</div>'
+ +'</div></div></div>';
+}
+function screenResFound(){
+ var r=S.lastRes;
+ return '<div class="page">'
+ +'<div class="page-head"><button class="icon-btn" data-act="privacy-reset" aria-label="Retour à l’accueil">'+ic('arrL')+'</button>'
+ +'<h1 class="t-h2">Votre réservation</h1></div>'
+ +'<div class="page-body scroll"><div class="wrap wrap-narrow stack gap6">'
+  +'<div class="recap">'
+    +'<div class="recap-head">'+ic('checkC')+'<div><b style="font-size:19px">Réservation confirmée</b>'
+    +'<div style="font-size:14px;opacity:.7">'+r.code+'</div></div></div>'
+    +'<div class="recap-row"><span class="recap-ico">'+ic('calendar')+'</span>'
+    +'<div class="grow"><div class="recap-k">Quand</div><div class="recap-v">Aujourd’hui — '+r.time+'</div></div></div>'
+    +'<div class="recap-row"><span class="recap-ico">'+ic('users')+'</span>'
+    +'<div class="grow"><div class="recap-k">Personnes</div><div class="recap-v num">'+r.people+' personnes</div></div></div>'
+    +'<div class="recap-row"><span class="recap-ico">'+ic('user')+'</span>'
+    +'<div class="grow"><div class="recap-k">Au nom de</div><div class="recap-v">'+esc(r.name)+'</div></div></div>'
+  +'</div>'
+  +'<button class="btn btn-primary btn-block" style="--btn-h:96px;font-size:24px" data-act="arrive">'+ic('login')+'Je suis arrivé</button>'
+  +'<div class="row gap4 wrapf">'
+    +'<button class="btn btn-secondary btn-lg grow" data-act="res-modify">'+ic('pencil')+'Modifier</button>'
+    +'<button class="btn btn-danger btn-lg grow" data-act="res-cancel-confirmed">'+ic('x')+'Annuler ma réservation</button>'
+  +'</div>'
+ +'</div></div></div>';
+}
+function screenArrivalOk(){
+ var n=S.lastRes?S.lastRes.name:'';
+ return '<div class="page"><div class="page-body"><div class="success">'
+  +'<div class="success-mark">'+ic('check')+'</div>'
+  +'<h1 class="t-h1">Merci '+esc(n)+' !</h1>'
+  +'<p class="t-lead" style="max-width:560px">L’équipe a été informée de votre arrivée.<br>Veuillez patienter, nous allons venir vous accueillir.</p>'
+  +'<div class="row gap3 acenter mt5"><span class="spinner"></span><span class="t-sm">Retour à l’accueil dans quelques secondes…</span></div>'
+ +'</div></div></div>';
+}
+
+/* ---------- LISTE D’ATTENTE ---------- */
+var WL={people:2,name:'',phone:''};
+function screenWaitlist(){
+ return '<div class="page">'
+ +'<div class="page-head"><button class="icon-btn" data-act="nav" data-to="reserve" aria-label="Retour">'+ic('arrL')+'</button>'
+ +'<h1 class="t-h2">Liste d’attente</h1></div>'
+ +'<div class="page-body scroll"><div class="wrap wrap-narrow stack gap6">'
+  +'<div class="panel card-pad row gap5 acenter wrapf">'
+    +'<span class="action-ico" style="background:var(--danger-soft);color:var(--danger)">'+ic('alertC')+'</span>'
+    +'<div class="grow"><h2 class="t-h2">Restaurant actuellement complet</h2>'
+    +'<p class="t-lead mt2">Temps d’attente estimé : <b style="color:var(--ink)">environ 20 min</b></p></div>'
+  +'</div>'
+  +'<div class="stack gap4">'
+    +'<h3 class="t-h3">Combien serez-vous ?</h3>'
+    +'<div class="pick-grid pick-grid-6">'+[1,2,3,4,5,6].map(function(n){
+      return '<button class="pick" data-act="wl-people" data-n="'+n+'" aria-pressed="'+(WL.people===n)+'">'
+       +'<b class="num">'+n+'</b><span>'+(n>1?'personnes':'personne')+'</span></button>';}).join('')+'</div>'
+  +'</div>'
+  +'<div class="field"><label class="field-label" for="wlName">À quel nom ?</label>'
+  +'<input class="input input-lg" id="wlName" value="'+esc(WL.name)+'" placeholder="Teo" maxlength="40"></div>'
+  +'<div class="field"><label class="field-label" for="wlPhone">Téléphone</label>'
+  +'<input class="input input-lg" id="wlPhone" inputmode="numeric" value="'+esc(WL.phone)+'" placeholder="06 12 34 56 78" maxlength="14"></div>'
+  +'<button class="btn btn-primary btn-xl btn-block" data-act="wl-join">'+ic('bell')+'Rejoindre la liste d’attente</button>'
+  +'<p class="t-sm center">Nous vous préviendrons par SMS dès qu’une table se libère.</p>'
+ +'</div></div></div>';
+}
+function screenWaitlistJoined(){
+ return '<div class="page"><div class="page-body scroll"><div class="success">'
+  +'<div class="success-mark is-red">'+ic('check')+'</div>'
+  +'<h1 class="t-h1">Vous êtes sur la liste d’attente</h1>'
+  +'<div class="ticket mt4">'
+    +'<div class="ticket-row"><span class="tk-k">Position estimée</span><span class="tk-v code-big">'+S.waitlist.pos+'</span></div>'
+    +'<div class="ticket-row"><span class="tk-k">Temps estimé</span><span class="tk-v">environ '+S.waitlist.eta+' min</span></div>'
+    +'<div class="ticket-row"><span class="tk-k">Personnes</span><span class="tk-v num">'+S.waitlist.people+'</span></div>'
+    +'<div class="ticket-row"><span class="tk-k">Au nom de</span><span class="tk-v">'+esc(S.waitlist.name)+'</span></div>'
+  +'</div>'
+  +'<p class="t-lead mt4" style="max-width:520px">Nous vous préviendrons lorsque votre table sera disponible.</p>'
+  +'<div class="row gap4 mt5 wrapf" style="justify-content:center">'
+    +'<button class="btn btn-secondary btn-lg" data-act="wl-leave">Quitter la liste</button>'
+    +'<button class="btn btn-primary btn-lg" data-act="privacy-reset">Terminer</button></div>'
+ +'</div></div></div>';
+}
+
+/* ---------- RESTAURANT FERMÉ ---------- */
+function screenClosed(){
+ return '<div class="page"><div class="page-body"><div class="success">'
+  +'<div class="empty-ill" style="width:132px;height:132px">'+ic('moon')+'</div>'
+  +'<h1 class="t-h1">Le restaurant est actuellement fermé</h1>'
+  +'<p class="t-lead" style="max-width:520px">Prochaine ouverture : <b style="color:var(--ink)">19:00</b>.<br>Vous pouvez dès à présent réserver une table pour plus tard.</p>'
+  +'<div class="row gap4 mt5 wrapf" style="justify-content:center">'
+    +'<button class="btn btn-secondary btn-lg" data-act="nav" data-to="home">Retour à l’accueil</button>'
+    +'<button class="btn btn-primary btn-xl" data-act="nav" data-to="reserve">'+ic('calendar')+'Réserver pour plus tard</button></div>'
+ +'</div></div></div>';
+}
+
+/* ---------- BESOIN D’AIDE ---------- */
+function openHelp(){
+ sheet({title:'Besoin d’aide ?',sub:'Un membre de l’équipe vient vous voir. Aucune commande n’est envoyée.',
+  body:'<div class="demo-list">'
+   +'<button class="demo-item" data-act="help-call" data-k="serveur"><i>'+ic('bell')+'</i>Appeler un serveur</button>'
+   +'<button class="demo-item" data-act="help-call" data-k="carte"><i>'+ic('book')+'</i>Une question sur la carte</button>'
+   +'<button class="demo-item" data-act="help-call" data-k="allergie"><i>'+ic('shield')+'</i>Signaler une allergie</button>'
+   +'<button class="demo-item" data-act="help-call" data-k="addition"><i>'+ic('receipt')+'</i>Demander l’addition</button>'
+  +'</div>'});
+}
+function confirmHelp(kind){
+ var labels={serveur:'Appeler un serveur',carte:'Poser une question sur la carte',
+  allergie:'Signaler une allergie',addition:'Demander l’addition'};
+ modal({title:labels[kind]+' ?',sub:'Quelqu’un va venir vous aider à la table '+S.table+'.',
+  body:'<div class="notice notice-info">'+ic('info')+'<div>Cette confirmation évite les appels déclenchés par erreur.</div></div>',
+  foot:'<button class="btn btn-secondary grow" data-act="close-layer">Annuler</button>'
+   +'<button class="btn btn-primary grow" data-act="help-confirm">'+ic('check')+'Confirmer</button>'});
+}
+
+/* ==========================================================================
+   DESIGN SYSTEM
+   ========================================================================== */
+const DS_COLORS=[
+ ['Blanc cassé','--paper','#FCFAF6','Fond général'],
+ ['Crème','--cream','#F4EEE4','Surfaces secondaires'],
+ ['Beige','--sand','#EBE1D2','Séparations douces'],
+ ['Bois clair','--wood','#DCC7AB','Touches chaleureuses'],
+ ['Noir doux','--ink','#191A1C','Titres, topbar'],
+ ['Anthracite','--ink-2','#33353A','Texte courant'],
+ ['Gris texte','--muted','#6B6E76','Informations secondaires'],
+ ['Filet','--line','#E7DFD3','Bordures'],
+ ['Rouge Osaka','--osaka','#C0362D','Marque et actions principales'],
+ ['Rouge profond','--osaka-deep','#96241D','État pressé'],
+ ['Rouge voilé','--osaka-soft','#FBEDEB','Fonds d’accent'],
+ ['Vert','--ok','#2E7D57','Disponible, succès'],
+ ['Ambre','--warn','#A97213','Presque complet'],
+ ['Rouge alerte','--danger','#B3261E','Erreurs, suppression']
+];
+function dsSection(title,sub,inner){
+ return '<section class="ds-section"><div class="stack gap2" style="margin-bottom:24px">'
+  +'<h2 class="t-h2">'+title+'</h2>'+(sub?'<p class="t-lead">'+sub+'</p>':'')+'</div>'+inner+'</section>';
+}
+function screenDS(){
+ var demoLine={id:'demo',pid:'r1',qty:2,note:'Sans oignon',opts:[{gid:'prot',cid:'porc',label:'Porc mariné (chashu)',price:0},{gid:'supp',cid:'oeuf',label:'Œuf supplémentaire',price:1.5}]};
+ return '<div class="page">'
+ +'<div class="page-head"><button class="icon-btn" data-act="nav" data-to="home" aria-label="Retour à l’accueil">'+ic('arrL')+'</button>'
+ +'<div class="grow"><span class="t-eyebrow">Documentation</span><h1 class="t-h2 mt2">Design system Osaka</h1></div>'
+ +'<span class="badge badge-new">v1.0</span></div>'
+ +'<div class="page-body scroll"><div class="wrap">'
+
+ +dsSection('Couleurs','Le rouge Osaka ne sert qu’à trois choses : la marque, l’action principale et la mise en valeur.',
+   '<div class="ds-grid">'+DS_COLORS.map(function(c){
+     return '<div class="swatch"><div class="swatch-c" style="background:var('+c[1]+')"></div>'
+      +'<div class="swatch-m"><b>'+c[0]+'</b><span>'+c[2]+'</span><span class="t-sm" style="font-size:12px">'+c[3]+'</span></div></div>';
+    }).join('')+'</div>')
+
+ +dsSection('Typographie','Lisible à 50–80 cm. Serif éditorial pour la marque et les titres d’écran, sans-serif pour toute l’interface.',
+   '<div class="ds-box stack gap4">'
+   +'<div><div class="ds-label">Display · 56 / 1.04 · serif</div><div class="t-display">Bienvenue chez Osaka</div></div>'
+   +'<div><div class="ds-label">Titre 1 · 38 / 1.1 · serif</div><div class="t-h1">Choisissez votre horaire</div></div>'
+   +'<div><div class="ds-label">Titre 2 · 27 / 1.2 · 700</div><div class="t-h2">Votre commande</div></div>'
+   +'<div><div class="ds-label">Titre 3 · 21 / 1.25 · 700</div><div class="t-h3">Shoyu Ramen</div></div>'
+   +'<div><div class="ds-label">Lead · 19 / 1.5</div><div class="t-lead">Que souhaitez-vous faire ?</div></div>'
+   +'<div><div class="ds-label">Corps · 16 / 1.5</div><div class="t-body">Bouillon shoyu, nouilles japonaises, porc mariné, œuf et légumes.</div></div>'
+   +'<div><div class="ds-label">Secondaire · 14.5</div><div class="t-sm">Pour toute allergie sévère, demandez confirmation à notre équipe.</div></div>'
+   +'<div><div class="ds-label">Eyebrow · 12.5 · +.16em</div><div class="t-eyebrow">Table 12</div></div>'
+   +'<div><div class="ds-label">Prix · 20 · tabulaire</div><div class="t-price">13,50 €</div></div>'
+   +'</div>')
+
+ +dsSection('Grille & espacement','Paysage : 20 % catégories · 55 % catalogue · 25 % panier. Base d’espacement de 4 px.',
+   '<div class="ds-box"><div class="row gap2" style="height:72px;align-items:stretch">'
+   +'<div style="flex:0 0 20%;background:var(--cream);border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:700">Catégories 20 %</div>'
+   +'<div style="flex:1;background:var(--osaka-soft);border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:700">Catalogue 55 %</div>'
+   +'<div style="flex:0 0 25%;background:var(--sand);border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:700">Panier 25 %</div>'
+   +'</div>'
+   +'<div class="mt6">'+[4,8,12,16,20,24,32,40,48,64].map(function(n){
+     return '<div class="spec-line"><code>'+n+'px</code><div class="ds-bar" style="width:'+(n*3)+'px"></div>'
+      +'<span class="t-sm">'+(n<=12?'micro-espacements':(n<=24?'espacements internes':'respirations d’écran'))+'</span></div>';}).join('')
+   +'</div></div>')
+
+ +dsSection('Rayons & ombres','Angles généreux, ombres chaudes — jamais de gris froid.',
+   '<div class="ds-grid">'
+   +[['8','--r-xs'],['12','--r-sm'],['16','--r-md'],['22','--r-lg'],['28','--r-xl'],['36','--r-2xl']].map(function(r){
+     return '<div class="ds-box center"><div style="height:70px;background:var(--cream);border-radius:var('+r[1]+');margin-bottom:10px"></div><code>'+r[0]+' px</code></div>';}).join('')
+   +'</div>'
+   +'<div class="ds-grid mt5">'
+   +[['Niveau 1','var(--sh-1)','Cards produit au repos'],['Niveau 2','var(--sh-2)','Panneaux, topbar'],
+     ['Niveau 3','var(--sh-3)','Survol, éléments actifs'],['Rouge','var(--sh-red)','Boutons primaires']].map(function(s){
+     return '<div class="ds-box" style="box-shadow:'+s[1]+'"><b>'+s[0]+'</b><div class="t-sm mt2">'+s[2]+'</div></div>';}).join('')
+   +'</div>')
+
+ +dsSection('Icônes','Trait 1.9 px, extrémités arrondies, toujours dans une cible d’au moins 48 px.',
+   '<div class="ds-box"><div class="row gap4 wrapf">'
+   +Object.keys(ICONS).map(function(k){
+     return '<div class="stack acenter gap2" style="width:92px"><span class="icon-btn">'+ic(k)+'</span>'
+      +'<span class="t-sm" style="font-size:11.5px;text-align:center">'+k+'</span></div>';}).join('')
+   +'</div></div>')
+
+ +dsSection('Boutons','Hauteur minimale 56 px, 68 px pour les actions fréquentes, 78 px pour les validations.',
+   '<div class="ds-box stack gap6">'
+   +'<div><div class="ds-label">Hiérarchie</div><div class="ds-row">'
+     +'<button class="btn btn-primary">Ajouter au panier</button>'
+     +'<button class="btn btn-secondary">Modifier</button>'
+     +'<button class="btn btn-tertiary">Plus tard</button>'
+     +'<button class="btn btn-dark">Voir la carte</button>'
+     +'<button class="btn btn-danger">Supprimer</button></div></div>'
+   +'<div><div class="ds-label">Tailles</div><div class="ds-row">'
+     +'<button class="btn btn-primary btn-sm">Petit · 48</button>'
+     +'<button class="btn btn-primary">Standard · 56</button>'
+     +'<button class="btn btn-primary btn-lg">Large · 68</button>'
+     +'<button class="btn btn-primary btn-xl">Validation · 78</button></div></div>'
+   +'<div><div class="ds-label">États</div><div class="ds-row">'
+     +'<button class="btn btn-primary">Default</button>'
+     +'<button class="btn btn-primary" style="background:var(--osaka-deep)">Hover</button>'
+     +'<button class="btn btn-primary" style="background:var(--osaka-deep);transform:scale(.975);box-shadow:none">Pressed</button>'
+     +'<button class="btn btn-primary" aria-disabled="true">Disabled</button>'
+     +'<button class="btn btn-primary is-loading" style="min-width:150px">Loading</button>'
+     +'<button class="btn btn-secondary" style="box-shadow:inset 0 0 0 2.5px var(--osaka)">Selected</button></div></div>'
+   +'<div><div class="ds-label">Boutons iconographiques</div><div class="ds-row">'
+     +'<button class="icon-btn">'+ic('x')+'</button>'
+     +'<button class="icon-btn">'+ic('pencil')+'</button>'
+     +'<button class="icon-btn icon-btn-ghost">'+ic('help')+'</button>'
+     +'<button class="icon-btn icon-btn-sm">'+ic('chevL')+'</button>'
+     +'<span class="t-sm">56 px et 48 px — jamais moins.</span></div></div>'
+   +'</div>')
+
+ +dsSection('Champs & saisie','Langage client, jamais de libellé technique. Clavier numérique tactile pour les numéros.',
+   '<div class="ds-box stack gap5">'
+   +'<div class="row gap5 wrapf" style="align-items:flex-start">'
+     +'<div class="field grow" style="min-width:260px"><label class="field-label">Prénom / nom</label>'
+     +'<input class="input" placeholder="Teo" readonly></div>'
+     +'<div class="field grow has-error" style="min-width:260px"><label class="field-label">Téléphone</label>'
+     +'<input class="input" value="06 12" readonly>'
+     +'<div class="err-msg">'+ic('alertC')+'Numéro incomplet — 10 chiffres attendus.</div></div>'
+   +'</div>'
+   +'<div class="field"><label class="field-label">Une demande particulière ?</label>'
+   +'<textarea class="textarea" placeholder="Ajouter une remarque pour l’ensemble de la commande" readonly></textarea></div>'
+   +'<div class="row gap5 wrapf">'
+     +'<div class="search" style="max-width:360px"><span class="s-ico">'+ic('search')+'</span>'
+     +'<input placeholder="Rechercher un plat…" readonly></div>'
+     +'<button class="switch" role="switch" aria-checked="true"><span class="switch-track"></span>'
+     +'<b style="color:var(--ink)">Recevoir ma confirmation par SMS</b></button>'
+   +'</div>'
+   +'<div class="row gap4 wrapf"><div class="phone-display" style="min-width:300px">06 12 34 56 78<i class="caret"></i></div>'
+   +'<div style="display:grid;grid-template-columns:repeat(3,80px);gap:10px">'
+   +[1,2,3].map(function(k){return '<button class="key">'+k+'</button>';}).join('')+'</div></div>'
+   +'</div>')
+
+ +dsSection('Sélecteurs tactiles','Le contrôle de quantité est un composant à part entière, jamais deux petites icônes.',
+   '<div class="ds-box stack gap6">'
+   +'<div><div class="ds-label">Quantité — large / standard / compact</div>'
+   +'<div class="ds-row">'+qtyHTML('demo1',2,{size:'qty-lg'})+qtyHTML('demo2',1,{})+qtyHTML('demo3',1,{size:'qty-sm',trash:true})+'</div></div>'
+   +'<div><div class="ds-label">Choix — nombre de personnes</div><div class="ds-row">'
+     +'<button class="pick" style="width:120px"><b class="num">2</b><span>personnes</span></button>'
+     +'<button class="pick" style="width:120px" aria-pressed="true"><b class="num">4</b><span>personnes</span></button></div></div>'
+   +'<div><div class="ds-label">Créneaux — disponible / presque complet / indisponible / sélectionné</div><div class="ds-row">'
+     +'<button class="slot" style="width:140px"><b>19:45</b><small>Disponible</small></button>'
+     +'<button class="slot is-tight" style="width:140px"><b>20:00</b><small>Presque complet</small></button>'
+     +'<button class="slot" style="width:140px" disabled><b>20:15</b><small>Complet</small></button>'
+     +'<button class="slot" style="width:140px" aria-pressed="true"><b>20:30</b><small>Sélectionné</small></button></div></div>'
+   +'<div><div class="ds-label">Options produit — radio / case / sélectionné / indisponible</div>'
+   +'<div class="opt-list" style="max-width:520px">'
+     +'<button class="opt" role="radio" aria-checked="false"><span class="opt-mark">'+ic('check')+'</span><span class="opt-lbl">Poulet grillé</span></button>'
+     +'<button class="opt" role="radio" aria-checked="true"><span class="opt-mark">'+ic('check')+'</span><span class="opt-lbl">Porc mariné</span></button>'
+     +'<button class="opt" role="checkbox" aria-checked="true"><span class="opt-mark opt-sq">'+ic('check')+'</span><span class="opt-lbl">Œuf supplémentaire</span><span class="opt-price">+ 1,50 €</span></button>'
+     +'<button class="opt" role="checkbox" aria-checked="false" data-disabled="true"><span class="opt-mark opt-sq">'+ic('check')+'</span><span class="opt-lbl">Porc supplémentaire</span><span class="opt-price">indisponible</span></button>'
+   +'</div></div>'
+   +'<div><div class="ds-label">Progression</div><div class="stack gap4" style="max-width:640px">'
+   +'<div class="stepper">'+RES_STEPS.map(function(l,i){
+     var cls=i<2?'is-done':(i===2?'is-current':'');
+     return (i?'<span class="step-sep"></span>':'')+'<div class="step '+cls+'"><span class="step-bullet">'+(i<2?ic('check'):(i+1))+'</span><span class="step-lbl">'+l+'</span></div>';}).join('')+'</div>'
+   +'<div class="progress"><i style="width:60%"></i></div></div></div>'
+   +'</div>')
+
+ +dsSection('Badges & chips','Deux badges maximum par carte produit.',
+   '<div class="ds-box stack gap5">'
+   +'<div class="ds-row">'+Object.keys(BADGE_META).map(badgeHTML).join('')
+   +'<span class="badge badge-out">Indisponible</span></div>'
+   +'<div class="ds-row"><button class="chip">Végétarien</button><button class="chip" aria-pressed="true">Épicé</button>'
+   +'<span class="chip chip-allergen">Soja</span><span class="chip chip-allergen">Gluten</span><span class="chip chip-allergen">Œuf</span></div>'
+   +'</div>')
+
+ +dsSection('Cards','Photo homogène en 4:3, description sur deux lignes maximum, prix et action toujours alignés.',
+   '<div class="row gap5 wrapf" style="align-items:flex-start">'
+   +'<div style="width:290px">'+productCard(prod('r1'))+'</div>'
+   +'<div style="width:290px">'+productCard(prod('s6'))+'</div>'
+   +'<div style="width:290px">'+skeletonGrid(1)+'</div>'
+   +'</div>'
+   +'<div class="mt5" style="max-width:520px"><button class="action-card"><span class="action-ico">'+ic('calendar')+'</span>'
+   +'<span class="action-txt"><b>Réserver une table</b><span>Réserver une table en quelques secondes</span></span>'
+   +'<span class="action-arrow">'+ic('arrR')+'</span></button></div>')
+
+ +dsSection('Composants panier','Le panier reste lisible d’un coup d’œil : nom, options, quantité, prix.',
+   '<div class="row gap5 wrapf" style="align-items:flex-start">'
+   +'<div style="width:340px;background:var(--surface);border-radius:22px;padding:16px;box-shadow:var(--sh-1)">'
+   +cartLineHTML(demoLine)
+   +'<div class="totals mt4"><div class="trow"><span>Sous-total</span><b>30,00 €</b></div>'
+   +'<div class="trow trow-total"><span>Total</span><b>30,00 €</b></div></div>'
+   +'<button class="btn btn-primary btn-block btn-split cart-cta mt4"><span>Commander</span><span>30,00 €</span></button></div>'
+   +'<div class="grow" style="min-width:380px">'+cartFullLine(demoLine)+'</div>'
+   +'</div>')
+
+ +dsSection('Composants réservation','Mêmes cards, mêmes rayons, mêmes boutons que la commande.',
+   '<div class="row gap5 wrapf" style="align-items:flex-start">'
+   +'<div style="width:420px"><div class="recap">'
+     +'<div class="recap-head">'+ic('pin')+'<div><b style="font-size:19px">Restaurant Osaka</b>'
+     +'<div style="font-size:14px;opacity:.7">Cuisine japonaise</div></div></div>'
+     +'<div class="recap-row"><span class="recap-ico">'+ic('users')+'</span><div class="grow">'
+     +'<div class="recap-k">Personnes</div><div class="recap-v">2 personnes</div></div>'
+     +'<button class="btn btn-tertiary btn-sm">'+ic('pencil')+'Modifier</button></div>'
+     +'<div class="recap-row"><span class="recap-ico">'+ic('clock')+'</span><div class="grow">'
+     +'<div class="recap-k">Horaire</div><div class="recap-v">20:00</div></div>'
+     +'<button class="btn btn-tertiary btn-sm">'+ic('pencil')+'Modifier</button></div>'
+   +'</div></div>'
+   +'<div class="grow" style="min-width:340px"><div class="panel card-pad">'
+   +'<div class="timeline">'+STATUS.map(function(s,i){
+      var cls=i<1?'is-done':(i===1?'is-current':'');
+      return '<div class="tl-step '+cls+'"><div class="tl-bar"></div><div class="tl-dot">'+ic(s.i)+'</div>'
+       +'<div class="tl-lbl">'+s.l+'</div></div>';}).join('')+'</div></div></div>'
+   +'</div>')
+
+ +dsSection('Retours & états','Aucune page blanche : squelettes, toasts courts, erreurs qui disent quoi faire.',
+   '<div class="ds-box stack gap5">'
+   +'<div class="ds-row">'
+     +'<div class="toast toast-ok" style="animation:none">'+ic('checkC')+'<span>Shoyu Ramen ajouté</span></div>'
+     +'<div class="toast toast-err" style="animation:none">'+ic('alertC')+'<span>Envoi impossible</span></div>'
+   +'</div>'
+   +'<div class="notice">'+ic('shield')+'<div>Pour toute allergie sévère, merci de demander confirmation à notre équipe.</div></div>'
+   +'<div class="notice notice-info">'+ic('info')+'<div>Nous ferons notre maximum selon les disponibilités.</div></div>'
+   +'<div class="notice notice-danger">'+ic('alert')+'<div>Votre commande n’a pas pu être envoyée. Aucun doublon n’a été enregistré.</div></div>'
+   +'<div class="row gap4 acenter"><span class="spinner"></span><span class="t-sm">Chargement de la carte…</span>'
+   +'<div class="sk sk-line" style="width:180px"></div><div class="sk" style="width:120px;height:48px;border-radius:99px"></div></div>'
+   +'<div class="row gap5 wrapf" style="align-items:center">'
+   +'<div class="empty-ill">'+ic('bag')+'</div><div><b class="t-h3">Votre panier est vide</b>'
+   +'<div class="t-sm mt2">Découvrez notre carte et ajoutez vos premiers plats.</div></div></div>'
+   +'</div>')
+
+ +'<div style="height:40px"></div></div></div></div>';
+}
+
+/* ==========================================================================
+   CONFIDENTIALITÉ / SESSION
+   ========================================================================== */
+var privacyTimer=null,countdownTimer=null;
+function privacySensitive(){
+ return (S.route==='reserve'&&S.res&&S.res.step>=5)||['find-res','res-found','res-confirmed','waitlist','waitlist-joined'].indexOf(S.route)>=0;
+}
+function armPrivacy(){
+ clearTimeout(privacyTimer);
+ if(!privacySensitive())return;
+ privacyTimer=setTimeout(showStillThere,60000);
+}
+function showStillThere(){
+ if($('#stillThere'))return;
+ var left=15;
+ var node=layer('<div class="overlay" id="stillThere"><div class="modal" role="alertdialog" aria-modal="true">'
+  +'<div class="modal-head"><div class="grow"><h2 class="t-h2">Êtes-vous toujours là ?</h2>'
+  +'<p class="t-sm mt2">Pour protéger vos informations, cette tablette revient à l’accueil dans <b id="ctd">'+left+'</b> secondes.</p></div></div>'
+  +'<div class="modal-body"><div class="notice">'+ic('lock')+'<div>Nom, téléphone, e-mail et réservation consultée seront effacés. Votre table et vos commandes en cours sont conservées.</div></div></div>'
+  +'<div class="modal-foot"><button class="btn btn-secondary grow" data-act="privacy-reset">Terminer maintenant</button>'
+  +'<button class="btn btn-primary grow" data-act="privacy-stay">'+ic('check')+'Je suis toujours là</button></div></div></div>');
+ clearInterval(countdownTimer);
+ countdownTimer=setInterval(function(){
+  left--;var el=$('#ctd',node);if(el)el.textContent=left;
+  if(left<=0){clearInterval(countdownTimer);privacyReset();}
+ },1000);
+}
+function privacyReset(){
+ clearInterval(countdownTimer);clearTimeout(privacyTimer);
+ S.res=null;S.lastRes=null;S.waitlist=null;findPhone='';WL={people:2,name:'',phone:''};
+ closeAllLayers();S.route='home';render();
+}
+
+/* ==========================================================================
+   PANNEAU DE DÉMONSTRATION (états impossibles à provoquer autrement)
+   ========================================================================== */
+function openDemo(){
+ var items=[
+  ['fill','Remplir le panier','bag'],['empty','Vider le panier','trash'],
+  ['loading','Chargement de la carte','hourglass'],['net','Erreur réseau','wifiOff'],
+  ['ordererr','Erreur d’envoi de commande','alert'],['out','Produit indisponible','info'],
+  ['full','Restaurant complet : '+(S.full?'oui':'non'),'users'],['closed','Restaurant fermé','moon'],
+  ['status','Commande en préparation','flame'],['resdemo','Réservation confirmée','calendar'],
+  ['found','Réservation retrouvée','search'],['waitlist','Liste d’attente','bell'],
+  ['privacy','Timeout confidentialité','lock'],['ds','Design system','palette']
+ ];
+ sheet({title:'Scénarios de démonstration',sub:'Ces raccourcis servent à présenter les états que l’on ne peut pas déclencher naturellement.',
+  body:'<div class="demo-list">'+items.map(function(x){
+    return '<button class="demo-item" data-act="demo" data-k="'+x[0]+'"><i>'+ic(x[2])+'</i>'+x[1]+'</button>';}).join('')+'</div>'});
+}
+function runDemo(k){
+ closeAllLayers();
+ if(k!=='net'){S.netError=false;S.menuLoaded=true;}
+ if(k==='fill'){
+  S.cart=[];
+  addToCart('r1',[{gid:'prot',cid:'porc',label:'Porc mariné (chashu)',price:0},{gid:'cuisson',cid:'std',label:'Standard',price:0}],'Sans oignon',1);
+  addToCart('b1',[{gid:'taille',cid:'33',label:'33 cl',price:0}],'',1);
+  addToCart('k1',[{gid:'sauce',cid:'sucree',label:'Sauce soja sucrée',price:0}],'',2);
+  S.route='menu';toast('Panier d’exemple ajouté');
+ }
+ else if(k==='empty'){S.cart=[];S.orderNote='';S.route='cart';}
+ else if(k==='loading'){S.netError=false;S.route='menu';S.loading=true;render();
+  setTimeout(function(){S.loading=false;refreshCatalog();},2600);return;}
+ else if(k==='net'){S.netError=true;S.loading=false;S.route='menu';}
+ else if(k==='ordererr'){S.orderError=!S.orderError;toast(S.orderError?'Prochain envoi : erreur simulée':'Envoi de commande rétabli');
+  S.route=S.cart.length?'cart':'menu';}
+ else if(k==='out'){S.route='menu';S.cat='sushis';S.query='';}
+ else if(k==='full'){S.full=!S.full;toast(S.full?'Restaurant marqué complet':'Places à nouveau disponibles');S.route='reserve';S.res=newRes();S.res.step=1;}
+ else if(k==='closed'){S.closed=!S.closed;S.route=S.closed?'closed':'home';}
+ else if(k==='status'){
+  if(!S.orders.length){S.orders.push({no:S.nextOrderNo++,lines:[
+    {id:uid(),pid:'r1',qty:1,note:'Sans oignon',opts:[{gid:'prot',cid:'porc',label:'Porc mariné (chashu)',price:0}]},
+    {id:uid(),pid:'b1',qty:1,note:'',opts:[{gid:'taille',cid:'33',label:'33 cl',price:0}]}],
+    note:'',total:17.7,count:2,eta:15,status:'prep',t:Date.now()});}
+  else{S.orders[S.orders.length-1].status='prep';}
+  S.route='order-status';}
+ else if(k==='resdemo'){
+  S.lastRes={people:2,when:'later',date:todayISO(),time:'20:00',pref:'salle',name:'Teo',phone:'0612345678',sms:true,code:'#A472'};
+  S.route='res-confirmed';}
+ else if(k==='found'){
+  S.lastRes={people:2,when:'later',date:todayISO(),time:'20:00',pref:'salle',name:'Teo',phone:'0612345678',sms:true,code:'#A472'};
+  S.route='res-found';}
+ else if(k==='waitlist'){S.full=true;WL={people:2,name:'',phone:''};S.route='waitlist';}
+ else if(k==='privacy'){if(!privacySensitive()){S.route='find-res';findPhone='0612345678';}render();showStillThere();return;}
+ else if(k==='ds'){S.route='ds';}
+ render();
+}
+
+/* ==========================================================================
+   RENDU
+   ========================================================================== */
+function render(){
+ renderTopbar();
+ var h;
+ switch(S.route){
+  case 'menu':h=screenMenu();break;
+  case 'cart':h=screenCart();break;
+  case 'order-sent':h=screenOrderSent();break;
+  case 'order-status':h=screenOrderStatus();break;
+  case 'reserve':h=screenReserve();break;
+  case 'res-confirmed':h=screenResConfirmed();break;
+  case 'find-res':h=screenFindRes();break;
+  case 'res-found':h=screenResFound();break;
+  case 'arrival-ok':h=screenArrivalOk();break;
+  case 'waitlist':h=screenWaitlist();break;
+  case 'waitlist-joined':h=screenWaitlistJoined();break;
+  case 'closed':h=screenClosed();break;
+  case 'ds':h=screenDS();break;
+  default:h=screenHome();
+ }
+ $('#screen').innerHTML=h;
+ armPrivacy();
+}
+function goto(to){
+ if(to==='menu'){
+  if(S.closed){S.route='closed';render();return;}
+  S.route='menu';S.cartOpen=false;
+  if(!S.menuLoaded&&!S.netError){S.loading=true;render();
+   setTimeout(function(){S.loading=false;S.menuLoaded=true;refreshCatalog();},850);return;}
+ }
+ else if(to==='cart'){S.route=S.cart.length?'cart':(S.orders.length?'order-status':'cart');}
+ else if(to==='reserve'){if(!S.res)S.res=newRes();S.route='reserve';}
+ else{S.route=to;}
+ render();
+}
+
+/* ==========================================================================
+   INTERACTIONS
+   ========================================================================== */
+var keyTarget='res';
+
+function updatePhoneUI(){
+ var out=$('#phoneOut');if(!out)return;
+ var v=keyTarget==='find'?findPhone:(S.res?S.res.phone:'');
+ out.className='phone-display '+(v?'':'is-empty');
+ out.innerHTML=(v?fmtPhone(v):'06 12 34 56 78')+'<i class="caret"></i>';
+ if(keyTarget==='find'){
+  var b=$('[data-act="do-find"]');if(b)b.setAttribute('aria-disabled',findPhone.length>=10?'false':'true');
+ }else{
+  var b2=$('[data-act="res-next"]');
+  if(b2)b2.setAttribute('aria-disabled',(S.res.name.trim().length>1&&S.res.phone.length>=10)?'false':'true');
+ }
+}
+function bump(el){if(!el)return;el.classList.remove('q-bump');void el.offsetWidth;el.classList.add('q-bump');}
+
+function resNext(){
+ var r=S.res;
+ if(r.step===0){r.step=1;}
+ else if(r.step===1){
+  if(!r.when)return;
+  if(r.when==='now'){
+   if(S.full){S.route='waitlist';render();return;}
+   r.date=todayISO();r.time=null;r.step=4;
+  }else{r.step=2;}
+ }
+ else if(r.step===2){r.step=3;}
+ else if(r.step===3){if(!r.time)return;r.step=4;}
+ else if(r.step===4){r.step=5;}
+ else if(r.step===5){if(!(r.name.trim().length>1&&r.phone.length>=10))return;r.step=6;}
+ render();
+}
+function resBack(){
+ var r=S.res;
+ if(!r||r.step===0){S.res=null;S.route='home';render();return;}
+ if(r.step===4&&r.when==='now')r.step=1;else r.step--;
+ render();
+}
+
+document.addEventListener('click',function(e){
+ var t=e.target.closest('[data-act]');
+ if(!t){
+  if(e.target.hasAttribute&&e.target.hasAttribute('data-overlay')){closeTop();}
+  return;
+ }
+ var a=t.getAttribute('data-act'),id=t.getAttribute('data-id');
+
+ switch(a){
+ /* Navigation */
+ case 'nav':goto(t.getAttribute('data-to'));break;
+ case 'help':closeAllLayers();openHelp();break;
+ case 'close-layer':closeTop();break;
+
+ /* Carte */
+ case 'cat':S.cat=id;S.query='';S.filters=[];render();break;
+ case 'clear-q':S.query='';render();break;
+ case 'reset-search':S.query='';S.filters=[];render();break;
+ case 'retry-menu':S.netError=false;S.loading=true;render();
+   setTimeout(function(){S.loading=false;S.menuLoaded=true;refreshCatalog();},1100);break;
+ case 'filters':
+   sheet({title:'Filtrer la carte',sub:'Affinez selon vos envies ou vos contraintes.',
+    body:'<div class="ds-row">'+Object.keys(BADGE_META).map(function(k){
+      return '<button class="chip" style="height:56px;font-size:17px" data-act="filter-toggle" data-k="'+k+'" aria-pressed="'+(S.filters.indexOf(k)>=0)+'">'
+       +ic(BADGE_META[k].icon)+BADGE_META[k].label+'</button>';}).join('')+'</div>',
+    foot:'<button class="btn btn-secondary grow" data-act="filters-clear">Tout effacer</button>'
+     +'<button class="btn btn-primary grow" data-act="close-layer">Voir les plats</button>'});
+   break;
+ case 'filter-toggle':{
+   var k=t.getAttribute('data-k'),i=S.filters.indexOf(k);
+   if(i>=0)S.filters.splice(i,1);else S.filters.push(k);
+   t.setAttribute('aria-pressed',S.filters.indexOf(k)>=0);
+   refreshCatalog();break;}
+ case 'filters-clear':S.filters=[];closeTop();render();break;
+ case 'toggle-cart':S.cartOpen=!S.cartOpen;
+   var cp=$('#cartPanel');if(cp)cp.classList.toggle('is-open',S.cartOpen);break;
+
+ /* Produit */
+ case 'open-product':openProduct(id);break;
+ case 'quick-add':if(quickAdd(id,t))toast(prod(id).name+' ajouté à votre commande');break;
+ case 'opt':{
+   var g=t.getAttribute('data-g'),c=t.getAttribute('data-c'),ty=t.getAttribute('data-type');
+   if(ty==='single'){PD.sel[g]=[c];}
+   else{var arr=PD.sel[g]||[],j=arr.indexOf(c);if(j>=0)arr.splice(j,1);else arr.push(c);PD.sel[g]=arr;}
+   refreshProductSheet();break;}
+ case 'add-to-cart':{
+   if(t.getAttribute('aria-disabled')==='true'){toast('Choisissez d’abord les options obligatoires','err');break;}
+   var note=$('#pdNote');PD.note=note?note.value:'';
+   var p=prod(PD.pid);
+   addToCart(PD.pid,pdSelectedOpts(),PD.note,PD.qty);
+   closeTop();refreshCart();refreshCatalog();
+   toast(p.name+' ajouté à votre commande');break;}
+ case 'update-line':{
+   var note2=$('#pdNote');PD.note=note2?note2.value:'';
+   var idx=-1;S.cart.forEach(function(l,i2){if(l.id===PD.lineId)idx=i2;});
+   if(idx>=0){S.cart[idx].opts=pdSelectedOpts();S.cart[idx].note=PD.note;S.cart[idx].qty=PD.qty;}
+   closeTop();
+   if(S.route==='cart')render();else{refreshCart();refreshCatalog();}
+   toast('Commande mise à jour');break;}
+ case 'edit-line':{
+   var l2=S.cart.filter(function(x){return x.id===id;})[0];
+   if(l2)openProduct(l2.pid,l2.id);break;}
+ case 'del-line':{
+   S.cart=S.cart.filter(function(x){return x.id!==id;});
+   toast('Plat retiré de votre commande');
+   if(S.route==='cart')render();else{refreshCart();refreshCatalog();}break;}
+
+ /* Quantité */
+ case 'qty-up':
+ case 'qty-down':{
+   var d=(a==='qty-up')?1:-1;
+   if(id==='pd'){
+    PD.qty=Math.max(1,PD.qty+d);refreshProductSheet();bump($('[data-qval="pd"]'));
+   }else if(id.indexOf('demo')===0){
+    var v=t.parentNode.querySelector('.q-val');v.textContent=Math.max(1,(+v.textContent)+d);bump(v);
+   }else{changeQty(id,d);}
+   break;}
+
+ /* Commande */
+ case 'confirm-order':{
+   var noteEl=$('#orderNote');if(noteEl)S.orderNote=noteEl.value;
+   doConfirmOrder(t);break;}
+ case 'retry-order':{closeTop();S.orderError=false;
+   setTimeout(function(){doConfirmOrder(null);},120);break;}
+
+ /* Réservation */
+ case 'res-people':S.res.people=+t.getAttribute('data-n');render();break;
+ case 'res-when':S.res.when=t.getAttribute('data-w');render();break;
+ case 'res-date':S.res.date=t.getAttribute('data-d');render();break;
+ case 'res-service':S.res.service=t.getAttribute('data-s');S.res.time=null;render();break;
+ case 'res-time':{
+   var tm=t.getAttribute('data-t');
+   if(tm==='20:15'&&!slotTakenShown&&S.res.service==='soir'){slotTakenShown=true;slotJustTaken(tm);break;}
+   S.res.time=tm;render();break;}
+ case 'res-time-alt':S.res.time=t.getAttribute('data-t');closeTop();render();break;
+ case 'res-pref':S.res.pref=t.getAttribute('data-p');render();break;
+ case 'res-sms':S.res.sms=!S.res.sms;t.setAttribute('aria-checked',S.res.sms);break;
+ case 'res-next':if(t.getAttribute('aria-disabled')==='true')break;resNext();break;
+ case 'res-back':resBack();break;
+ case 'res-goto':S.res.step=+t.getAttribute('data-s');render();break;
+ case 'res-cancel':
+   modal({title:'Abandonner la réservation ?',sub:'Les informations saisies seront effacées de cette tablette.',
+    foot:'<button class="btn btn-secondary grow" data-act="close-layer">Continuer</button>'
+     +'<button class="btn btn-danger grow" data-act="res-cancel-yes">Abandonner</button>'});
+   break;
+ case 'res-cancel-yes':closeAllLayers();S.res=null;S.route='home';render();break;
+ case 'res-confirm':{
+   t.classList.add('is-loading');
+   setTimeout(function(){
+    var r=S.res;
+    r.code='#A'+(400+Math.floor(Math.random()*580));
+    S.lastRes=r;S.res=null;S.route='res-confirmed';render();
+   },900);break;}
+ case 'res-modify':{
+   var base=S.lastRes||{};
+   S.res={step:6,people:base.people||2,when:base.when||'later',date:base.date||todayISO(),
+    time:base.time,pref:base.pref||'none',name:base.name||'',phone:base.phone||'',sms:!!base.sms,email:'',service:'soir'};
+   S.route='reserve';render();break;}
+ case 'res-cancel-confirmed':
+   modal({title:'Annuler votre réservation ?',sub:'Cette action est définitive. Vous pourrez réserver à nouveau à tout moment.',
+    foot:'<button class="btn btn-secondary grow" data-act="close-layer">Garder ma réservation</button>'
+     +'<button class="btn btn-danger grow" data-act="res-cancel-done">Annuler la réservation</button>'});
+   break;
+ case 'res-cancel-done':closeAllLayers();toast('Réservation annulée');privacyReset();break;
+ case 'res-finish':privacyReset();break;
+
+ /* Calendrier */
+ case 'open-cal':openCalendar();break;
+ case 'cal-nav':{CAL.m+=(+t.getAttribute('data-n'));
+   if(CAL.m<0){CAL.m=11;CAL.y--;}if(CAL.m>11){CAL.m=0;CAL.y++;}
+   $('#calHost').innerHTML=calendarHTML();break;}
+ case 'cal-day':S.res.date=t.getAttribute('data-d');$('#calHost').innerHTML=calendarHTML();
+   setTimeout(function(){closeTop();render();},180);break;
+
+ /* Clavier numérique */
+ case 'key':{
+   keyTarget=t.getAttribute('data-target')==='find'?'find':'res';
+   var kk=t.getAttribute('data-k');
+   var cur=keyTarget==='find'?findPhone:S.res.phone;
+   if(kk==='del')cur=cur.slice(0,-1);
+   else if(kk==='clear')cur='';
+   else if(cur.length<10)cur=cur+kk;
+   if(keyTarget==='find')findPhone=cur;else S.res.phone=cur;
+   updatePhoneUI();break;}
+
+ /* Retrouver / arrivée */
+ case 'do-find':{
+   if(t.getAttribute('aria-disabled')==='true')break;
+   t.classList.add('is-loading');
+   setTimeout(function(){
+    if(findPhone.charAt(1)==='7'){
+     t.classList.remove('is-loading');
+     modal({title:'Aucune réservation à ce numéro',sub:'Vérifiez le numéro saisi ou demandez de l’aide à notre équipe.',
+      body:'<div class="notice notice-info">'+ic('info')+'<div>Votre réservation a peut-être été enregistrée avec un autre téléphone.</div></div>',
+      foot:'<button class="btn btn-secondary grow" data-act="close-layer">Réessayer</button>'
+       +'<button class="btn btn-primary grow" data-act="help">'+ic('help')+'Demander de l’aide</button>'});
+     return;
+    }
+    S.lastRes={people:2,when:'later',date:todayISO(),time:'20:00',pref:'salle',
+     name:'Teo',phone:findPhone,sms:true,code:'#A472'};
+    S.route='res-found';render();
+   },900);break;}
+ case 'arrive':{
+   S.route='arrival-ok';render();
+   setTimeout(function(){if(S.route==='arrival-ok')privacyReset();},6500);break;}
+ case 'privacy-reset':privacyReset();break;
+ case 'privacy-stay':clearInterval(countdownTimer);closeTop();armPrivacy();break;
+
+ /* Liste d’attente */
+ case 'wl-people':WL.people=+t.getAttribute('data-n');render();break;
+ case 'wl-join':{
+   var n1=$('#wlName'),p1=$('#wlPhone');
+   WL.name=n1?n1.value:'';WL.phone=p1?p1.value:'';
+   if(WL.name.trim().length<2||WL.phone.replace(/\D/g,'').length<10){
+    toast('Merci d’indiquer votre nom et votre téléphone','err');break;}
+   S.waitlist={pos:3,eta:20,people:WL.people,name:WL.name};
+   S.route='waitlist-joined';render();break;}
+ case 'wl-leave':
+   modal({title:'Quitter la liste d’attente ?',sub:'Vous perdrez votre position actuelle.',
+    foot:'<button class="btn btn-secondary grow" data-act="close-layer">Rester</button>'
+     +'<button class="btn btn-danger grow" data-act="wl-leave-yes">Quitter</button>'});
+   break;
+ case 'wl-leave-yes':closeAllLayers();toast('Vous avez quitté la liste d’attente');privacyReset();break;
+
+ /* Aide */
+ case 'help-call':closeTop();confirmHelp(t.getAttribute('data-k'));break;
+ case 'help-confirm':closeAllLayers();toast('Un membre de l’équipe arrive à la table '+S.table);break;
+
+ /* Démo */
+ case 'demo':runDemo(t.getAttribute('data-k'));break;
+ case 'demo-open':closeAllLayers();openDemo();break;
+ }
+});
+
+/* Saisies */
+document.addEventListener('input',function(e){
+ var el=e.target;
+ if(el.id==='q'){
+  S.query=el.value;
+  refreshCatalog();
+  var title=$('.catalog-title-row .t-h2'),eye=$('.catalog-title-row .t-eyebrow'),cnt=$('.catalog-title-row .t-sm');
+  var n=filteredProducts().length;
+  if(title)title.textContent=S.query?'« '+S.query+' »':catName(S.cat);
+  if(eye)eye.textContent=S.query?'Recherche':'Catégorie';
+  if(cnt)cnt.textContent=n+' plat'+(n>1?'s':'');
+  var clr=$('.s-clear');if(clr)clr.classList.toggle('hide',!S.query);
+  $$('.cat').forEach(function(c){c.setAttribute('aria-selected',!S.query&&c.getAttribute('data-id')===S.cat);});
+ }
+ else if(el.id==='orderNote'){S.orderNote=el.value;}
+ else if(el.id==='pdNote'&&PD){PD.note=el.value;}
+ else if(el.id==='resName'&&S.res){S.res.name=el.value;
+  var srow=$('.side-row[data-side="Au nom de"]');
+  if(srow){srow.classList.toggle('is-todo',!el.value.trim());
+   srow.querySelector('.sr-v').textContent=el.value.trim()||'À choisir';}
+  var b=$('[data-act="res-next"]');
+  if(b)b.setAttribute('aria-disabled',(S.res.name.trim().length>1&&S.res.phone.length>=10)?'false':'true');}
+ else if(el.id==='wlName'){WL.name=el.value;}
+ else if(el.id==='wlPhone'){WL.phone=el.value;}
+});
+
+/* Toute interaction repousse le délai de confidentialité */
+document.addEventListener('pointerdown',function(){if(!$('#stillThere'))armPrivacy();});
+document.addEventListener('keydown',function(e){
+ if(e.key==='Escape'&&$('#layers').lastElementChild&&!$('#stillThere'))closeTop();
+});
+
+/* ---------- INIT ---------- */
+render();
+
+})();
+</script>
+
+</body>
+</html>
