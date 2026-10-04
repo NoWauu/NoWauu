@@ -1,0 +1,57 @@
+/* Design tokens. Every colour, radius and shadow the UI uses is defined here,
+   so the look can be retuned in one place. Dark theme only: a gym app is used
+   in mixed lighting and dark surfaces make the coloured body map pop. */
+
+:root {
+  color-scheme: dark;
+  --font: 'Inter Variable', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+  /* Surfaces, from page background up to raised controls */
+  --bg: #0b0d12;
+  --surface-1: #13161d;
+  --surface-2: #1a1e27;
+  --surface-3: #232835;
+  --line: rgb(255 255 255 / 0.07);
+  --line-strong: rgb(255 255 255 / 0.13);
+
+  /* Text */
+  --text-1: #f3f5f8;
+  --text-2: #a6aebb;
+  --text-3: #6f7786;
+
+  /* Brand: one interactive hue (same family as the volume ramp) */
+  --accent: #3082f6;
+  --accent-hover: #4b93ff;
+  --accent-soft: rgb(48 130 246 / 0.16);
+  --accent-soft-solid: #1d4f93;
+  --on-accent: #ffffff;
+
+  /* Status: reserved meanings, always paired with an icon or a label */
+  --success: #3ec873;
+  --success-soft: rgb(62 200 115 / 0.13);
+  --danger: #f45058;
+  --danger-soft: rgb(244 80 88 / 0.12);
+  --warning: #f7b83d;
+  --warning-soft: rgb(247 184 61 / 0.14);
+
+  /* Body map */
+  --body-skin: #272c37;
+  --body-hair: #1b1f27;
+  --muscle-idle: #3a404e;
+
+  /* Shape */
+  --r-xs: 6px;
+  --r-sm: 10px;
+  --r-md: 14px;
+  --r-lg: 18px;
+  --r-xl: 24px;
+  --shadow-lg: 0 24px 60px rgb(0 0 0 / 0.5);
+  --shadow-md: 0 8px 24px rgb(0 0 0 / 0.35);
+
+  /* Layout */
+  --page-w: 600px;
+  --gutter: 16px;
+  --tabbar-h: 64px;
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+}

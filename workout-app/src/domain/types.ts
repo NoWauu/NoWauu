@@ -12,7 +12,9 @@ export type MuscleGroupId =
   | 'lats'
   | 'lowerBack'
   | 'abs'
+  | 'obliques'
   | 'quads'
+  | 'adductors'
   | 'hamstrings'
   | 'glutes'
   | 'calves';
@@ -57,6 +59,8 @@ export interface SetEntry {
   weightKg: number;
   reps: number;
   done: boolean;
+  /** Warm-up sets are logged but count for neither volume nor rank. */
+  warmup?: boolean;
 }
 
 export interface ExerciseLog {
@@ -74,11 +78,14 @@ export interface Workout {
   endedAt?: number;
   /** Bodyweight snapshot: a ratio is judged against what you weighed *then*. */
   bodyweightKg: number;
-  sex: Sex;
   exercises: ExerciseLog[];
 }
 
 export interface Profile {
   bodyweightKg: number;
   sex: Sex;
+  /** Default rest between sets, in seconds. */
+  restSeconds?: number;
+  /** Beep when the rest timer ends. */
+  restSound?: boolean;
 }

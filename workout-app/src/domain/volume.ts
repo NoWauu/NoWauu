@@ -1,4 +1,5 @@
 import { MUSCLE_GROUPS } from './muscles';
+import { isWorkingSet } from './ranking';
 import type { Exercise, MuscleGroupId, Workout } from './types';
 
 /** A set counts fully for primary muscles and half for secondary ones. */
@@ -25,20 +26,18 @@ export function emptyVolume(): Volume {
   return Object.fromEntries(MUSCLE_GROUPS.map((m) => [m.id, 0])) as Volume;
 }
 
-/** Weighted number of completed sets per muscle group in [from, to). */
-export function weeklyVolume(
-  workouts: Workout[],
-  exercises: Record<string, Exercise>,
-  from: Date,
-  to: Date,
-): Volume {
+export function workoutsBetween(workouts: Workout[], from: Date, to: Date): Workout[] {
+  return workouts.filter((w) => w.startedAt >= from.getTime() && w.startedAt < to.getTime());
+}
+
+/** Weighted number of working sets per muscle group. */
+export function volumeOf(workouts: Workout[], exercises: Record<string, Exercise>): Volume {
   const vol = emptyVolume();
   for (const w of workouts) {
-    if (w.startedAt < from.getTime() || w.startedAt >= to.getTime()) continue;
     for (const log of w.exercises) {
       const ex = exercises[log.exerciseId];
       if (!ex) continue;
-      const sets = log.sets.filter((s) => s.done && s.reps > 0).length;
+      const sets = log.sets.filter(isWorkingSet).length;
       for (const g of ex.primary) vol[g] += sets;
       for (const g of ex.secondary) vol[g] += sets * SECONDARY_WEIGHT;
     }
@@ -46,19 +45,31 @@ export function weeklyVolume(
   return vol;
 }
 
+export function weeklyVolume(
+  workouts: Workout[],
+  exercises: Record<string, Exercise>,
+  from: Date,
+  to: Date,
+): Volume {
+  return volumeOf(workoutsBetween(workouts, from, to), exercises);
+}
+
 /**
- * Colour bands for weekly sets. ~10–20 hard sets per muscle per week is the
- * range most hypertrophy research converges on.
+ * Weekly sets are a magnitude, so they get a single-hue sequential ramp
+ * (dark → light on the dark theme), never a rainbow. ~10–20 hard sets per
+ * muscle per week is where most hypertrophy research converges.
  */
 export const VOLUME_BANDS = [
-  { min: 0, max: 0, label: 'Repos', color: 'var(--muscle-idle)' },
-  { min: 0.5, max: 4.5, label: '1–4 séries', color: '#3a86ff' },
-  { min: 5, max: 9.5, label: '5–9 séries', color: '#06d6a0' },
-  { min: 10, max: 20, label: '10–20 (optimal)', color: '#ffd166' },
-  { min: 20.5, max: Infinity, label: '20+ séries', color: '#ef476f' },
+  { max: 4.5, label: '1–4', color: '#185a89' },
+  { max: 9.5, label: '5–9', color: '#0a78b7' },
+  { max: 14.5, label: '10–14', color: '#1b9ddd' },
+  { max: 20, label: '15–20', color: '#4dc4ee' },
+  { max: Infinity, label: '20+', color: '#8de8f8' },
 ];
 
-export function volumeColor(sets: number): string {
-  if (sets <= 0) return VOLUME_BANDS[0].color;
-  return (VOLUME_BANDS.slice(1).find((b) => sets <= b.max) ?? VOLUME_BANDS[VOLUME_BANDS.length - 1]).color;
+export const TARGET_SETS = { min: 10, max: 20 };
+
+export function volumeColor(sets: number): string | null {
+  if (sets <= 0) return null;
+  return VOLUME_BANDS.find((b) => sets <= b.max)!.color;
 }

@@ -342,7 +342,7 @@ export const EXERCISES: Exercise[] = [
     name: 'Soulevé de terre',
     equipment: 'Barre',
     primary: ['lowerBack', 'glutes', 'hamstrings'],
-    secondary: ['quads', 'traps', 'forearms', 'lats'],
+    secondary: ['quads', 'adductors', 'traps', 'forearms', 'lats'],
     scoring: { kind: 'load', ref: 1.6 },
     steps: [
       'Pieds largeur de hanches, barre au-dessus du milieu du pied.',
@@ -549,7 +549,7 @@ export const EXERCISES: Exercise[] = [
     name: 'Crunch',
     equipment: 'Poids du corps',
     primary: ['abs'],
-    secondary: [],
+    secondary: ['obliques'],
     scoring: { kind: 'reps', ref: 40 },
     steps: [
       'Allongé, genoux fléchis, mains aux tempes.',
@@ -563,7 +563,7 @@ export const EXERCISES: Exercise[] = [
     name: 'Relevés de jambes suspendu',
     equipment: 'Poids du corps',
     primary: ['abs'],
-    secondary: ['forearms'],
+    secondary: ['obliques', 'forearms'],
     scoring: { kind: 'reps', ref: 15 },
     steps: [
       'Suspendu à une barre, corps immobile.',
@@ -577,7 +577,7 @@ export const EXERCISES: Exercise[] = [
     name: 'Roue abdominale',
     equipment: 'Poids du corps',
     primary: ['abs'],
-    secondary: ['lats', 'shoulders'],
+    secondary: ['obliques', 'lats', 'shoulders'],
     scoring: { kind: 'reps', ref: 15 },
     steps: [
       'À genoux, mains sur la roue sous les épaules.',
@@ -591,7 +591,7 @@ export const EXERCISES: Exercise[] = [
     name: 'Crunch à la poulie',
     equipment: 'Poulie',
     primary: ['abs'],
-    secondary: [],
+    secondary: ['obliques'],
     scoring: { kind: 'load', ref: 0.7 },
     steps: [
       'À genoux face à la poulie haute, corde derrière la tête.',
@@ -605,7 +605,7 @@ export const EXERCISES: Exercise[] = [
     name: 'Gainage (planche)',
     equipment: 'Poids du corps',
     primary: ['abs'],
-    secondary: ['shoulders'],
+    secondary: ['obliques', 'shoulders'],
     scoring: { kind: 'reps', ref: 120, unit: 'sec' },
     steps: [
       'En appui sur les avant-bras et les pointes de pieds.',
@@ -615,13 +615,57 @@ export const EXERCISES: Exercise[] = [
     tips: ['Saisis la durée en secondes dans le champ reps.'],
   },
 
+  // ----------------------------------------------------------------- Obliques
+  {
+    id: 'russian-twist',
+    name: 'Russian twist',
+    equipment: 'Poids du corps',
+    primary: ['obliques'],
+    secondary: ['abs'],
+    scoring: { kind: 'reps', ref: 40 },
+    steps: [
+      'Assis, buste incliné à ~45°, pieds décollés (ou posés pour débuter).',
+      'Tourne les épaules d’un côté en amenant les mains près de la hanche.',
+      'Passe de l’autre côté sans arrondir le dos.',
+    ],
+    tips: ['Compte une rep par côté.', 'Le rang se base sur le maximum de reps.'],
+  },
+  {
+    id: 'side-plank',
+    name: 'Gainage latéral',
+    equipment: 'Poids du corps',
+    primary: ['obliques'],
+    secondary: ['abs', 'glutes'],
+    scoring: { kind: 'reps', ref: 75, unit: 'sec' },
+    steps: [
+      'Sur le côté, en appui sur l’avant-bras, coude sous l’épaule.',
+      'Monte les hanches pour aligner chevilles, hanches et épaules.',
+      'Tiens la position, puis change de côté.',
+    ],
+    tips: ['Saisis la durée d’un côté, en secondes.'],
+  },
+  {
+    id: 'cable-woodchopper',
+    name: 'Bûcheron à la poulie',
+    equipment: 'Poulie',
+    primary: ['obliques'],
+    secondary: ['abs', 'shoulders'],
+    scoring: { kind: 'load', ref: 0.35 },
+    steps: [
+      'Poulie haute sur le côté, poignée tenue à deux mains.',
+      'Tire en diagonale vers la hanche opposée en pivotant le buste.',
+      'Reviens lentement, bras quasi tendus.',
+    ],
+    tips: ['La rotation vient du tronc, pas des bras.'],
+  },
+
   // -------------------------------------------------------------- Quadriceps
   {
     id: 'squat',
     name: 'Squat (barre)',
     equipment: 'Barre',
     primary: ['quads', 'glutes'],
-    secondary: ['hamstrings', 'lowerBack', 'abs'],
+    secondary: ['hamstrings', 'adductors', 'lowerBack', 'abs'],
     scoring: { kind: 'load', ref: 1.35 },
     steps: [
       'Barre sur les trapèzes, pieds largeur d’épaules, pointes légèrement ouvertes.',
@@ -679,7 +723,7 @@ export const EXERCISES: Exercise[] = [
     equipment: 'Haltères',
     perSide: true,
     primary: ['quads', 'glutes'],
-    secondary: ['hamstrings'],
+    secondary: ['hamstrings', 'adductors'],
     scoring: { kind: 'load', ref: 0.35 },
     steps: [
       'Pied arrière posé sur un banc, haltères en mains.',
@@ -694,7 +738,7 @@ export const EXERCISES: Exercise[] = [
     equipment: 'Haltères',
     perSide: true,
     primary: ['quads', 'glutes'],
-    secondary: ['hamstrings', 'calves'],
+    secondary: ['hamstrings', 'adductors', 'calves'],
     scoring: { kind: 'load', ref: 0.35 },
     steps: [
       'Haltères en mains, fais un grand pas en avant.',
@@ -702,6 +746,50 @@ export const EXERCISES: Exercise[] = [
       'Pousse sur la jambe avant et enchaîne avec l’autre jambe.',
     ],
     tips: ['Compte les reps par jambe.'],
+  },
+
+  // --------------------------------------------------------------- Adducteurs
+  {
+    id: 'hip-adduction',
+    name: 'Adducteurs à la machine',
+    equipment: 'Machine',
+    primary: ['adductors'],
+    secondary: [],
+    scoring: { kind: 'load', ref: 1.1 },
+    steps: [
+      'Assis, coussinets contre l’intérieur des genoux, jambes écartées.',
+      'Serre les jambes jusqu’à ce que les coussinets se touchent.',
+      'Reviens lentement jusqu’à l’étirement.',
+    ],
+    tips: ['Ne laisse pas les charges claquer en fin de retour.'],
+  },
+  {
+    id: 'copenhagen-plank',
+    name: 'Planche Copenhague',
+    equipment: 'Poids du corps',
+    primary: ['adductors'],
+    secondary: ['obliques'],
+    scoring: { kind: 'reps', ref: 40, unit: 'sec' },
+    steps: [
+      'Gainage latéral, jambe du dessus posée sur un banc (genou ou cheville).',
+      'Décolle la hanche et la jambe du dessous du sol.',
+      'Tiens en gardant le corps aligné, puis change de côté.',
+    ],
+    tips: ['Genou sur le banc = version facile, cheville = version difficile.'],
+  },
+  {
+    id: 'sumo-deadlift',
+    name: 'Soulevé de terre sumo',
+    equipment: 'Barre',
+    primary: ['glutes', 'adductors', 'quads'],
+    secondary: ['hamstrings', 'lowerBack', 'traps', 'forearms'],
+    scoring: { kind: 'load', ref: 1.6 },
+    steps: [
+      'Pieds très écartés, pointes ouvertes, mains entre les jambes.',
+      'Pousse les genoux vers l’extérieur, poitrine haute, dos plat.',
+      'Écarte le sol avec les pieds et verrouille les hanches en haut.',
+    ],
+    tips: ['Les tibias restent quasi verticaux au départ.'],
   },
 
   // --------------------------------------------------------- Ischio-jambiers
@@ -779,6 +867,21 @@ export const EXERCISES: Exercise[] = [
       'Reviens lentement.',
     ],
     tips: ['Ne cambre pas : le mouvement vient de la hanche.'],
+  },
+
+  {
+    id: 'hip-abduction',
+    name: 'Abducteurs à la machine',
+    equipment: 'Machine',
+    primary: ['glutes'],
+    secondary: [],
+    scoring: { kind: 'load', ref: 1.0 },
+    steps: [
+      'Assis, coussinets contre l’extérieur des genoux.',
+      'Écarte les jambes le plus loin possible.',
+      'Reviens lentement.',
+    ],
+    tips: ['Buste penché en avant = plus de fessiers.'],
   },
 
   // ------------------------------------------------------------------ Mollets

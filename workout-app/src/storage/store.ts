@@ -1,10 +1,9 @@
-import { useSyncExternalStore } from 'react';
 import type { Profile, Workout } from '../domain/types';
+import { createStore } from './createStore';
 
-// Single source of truth, persisted to localStorage. The whole app state is a
-// few hundred KB even after years of training, so a plain JSON blob is simpler
-// and safer than IndexedDB here. The `version` field + `migrate` keep old
-// saves loadable when the shape changes.
+// Persistent app data. The whole history is a few hundred KB even after years
+// of training, so one JSON blob in localStorage is simpler and safer than
+// IndexedDB. `migrate` keeps older saves loadable when the shape evolves.
 
 export interface AppState {
   version: 1;
@@ -12,8 +11,6 @@ export interface AppState {
   workouts: Workout[];
   active: Workout | null;
 }
-
-const KEY = 'nowauu-workout';
 
 const initial: AppState = { version: 1, profile: null, workouts: [], active: null };
 
@@ -28,54 +25,19 @@ function migrate(raw: unknown): AppState {
   };
 }
 
-function load(): AppState {
-  try {
-    const raw = localStorage.getItem(KEY);
-    return raw ? migrate(JSON.parse(raw)) : initial;
-  } catch {
-    return initial;
-  }
-}
+const store = createStore(initial, { key: 'nowauu-workout', migrate });
 
-let state: AppState = load();
-const listeners = new Set<() => void>();
-
-function persist() {
-  try {
-    localStorage.setItem(KEY, JSON.stringify(state));
-  } catch {
-    // Storage full or blocked (private mode): keep working in memory.
-  }
-}
-
-export function getState(): AppState {
-  return state;
-}
-
-export function setState(update: (s: AppState) => AppState) {
-  state = update(state);
-  persist();
-  listeners.forEach((l) => l());
-}
-
-function subscribe(listener: () => void) {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
-}
-
-export function useAppState<T>(selector: (s: AppState) => T): T {
-  return useSyncExternalStore(subscribe, () => selector(state));
-}
-
-// ---------------------------------------------------------------- Backup
+export const getState = store.get;
+export const setState = store.set;
+export const useAppState = store.use;
 
 export function exportJson(): string {
-  return JSON.stringify(state, null, 2);
+  return JSON.stringify(store.get(), null, 2);
 }
 
 export function importJson(text: string) {
   const next = migrate(JSON.parse(text));
-  setState(() => next);
+  store.set(() => next);
 }
 
 export function uid(): string {

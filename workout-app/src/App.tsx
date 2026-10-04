@@ -1,46 +1,53 @@
-import { ExerciseDetailPage, ExercisesPage } from './pages/ExercisesPage';
-import { ProfileForm, ProfilePage } from './pages/ProfilePage';
-import { RanksPage } from './pages/RanksPage';
-import { WeekPage } from './pages/WeekPage';
-import { WorkoutPage } from './pages/WorkoutPage';
+import { BookOpen, ChevronRight, Dumbbell, PersonStanding, Trophy, UserRound } from 'lucide-react';
+import { RestTimer } from './components/RestTimer';
+import { ConfirmHost, ToastHost } from './components/ui/Hosts';
 import { useRoute } from './hooks/useRoute';
+import { formatClock } from './lib/format';
+import { useNow } from './lib/hooks';
+import { BodyPage } from './pages/BodyPage';
+import { ExerciseDetailPage, ExercisesPage } from './pages/ExercisesPage';
+import { Onboarding, ProfilePage } from './pages/ProfilePage';
+import { RanksPage } from './pages/RanksPage';
+import { WorkoutPage } from './pages/WorkoutPage';
 import { useAppState } from './storage/store';
 
 const TABS = [
-  { path: '', label: 'Séance', icon: '🏋️' },
-  { path: 'exos', label: 'Exos', icon: '📖' },
-  { path: 'semaine', label: 'Semaine', icon: '🧍' },
-  { path: 'rangs', label: 'Rangs', icon: '🏆' },
-  { path: 'profil', label: 'Profil', icon: '⚙️' },
+  { path: '', label: 'Séance', Icon: Dumbbell },
+  { path: 'exos', label: 'Exercices', Icon: BookOpen },
+  { path: 'corps', label: 'Corps', Icon: PersonStanding },
+  { path: 'rangs', label: 'Rangs', Icon: Trophy },
+  { path: 'profil', label: 'Profil', Icon: UserRound },
 ];
 
+/** Floating shortcut back to the running workout from any other tab. */
+function ActiveWorkoutPill() {
+  const startedAt = useAppState((s) => s.active?.startedAt ?? null);
+  const now = useNow(1000, startedAt !== null);
+  if (startedAt === null) return null;
+  return (
+    <a className="active-pill" href="#/">
+      <span className="live-dot" />
+      Séance en cours
+      <span className="tabular text-2">{formatClock((now - startedAt) / 1000)}</span>
+      <ChevronRight size={16} />
+    </a>
+  );
+}
+
 export function App() {
-  const profile = useAppState((s) => s.profile);
+  const hasProfile = useAppState((s) => s.profile !== null);
   const hasActive = useAppState((s) => s.active !== null);
   const [section = '', param] = useRoute();
 
-  if (!profile) {
-    return (
-      <main className="page onboarding">
-        <h1>Bienvenue 💪</h1>
-        <p className="muted">
-          Ton carnet d’entraînement avec rangs par exercice, par muscle et global. Pour calibrer les rangs, on a besoin
-          de deux infos.
-        </p>
-        <section className="card">
-          <ProfileForm initial={null} />
-        </section>
-      </main>
-    );
-  }
+  if (!hasProfile) return <Onboarding />;
 
   let page;
   switch (section) {
     case 'exos':
       page = param ? <ExerciseDetailPage id={param} /> : <ExercisesPage />;
       break;
-    case 'semaine':
-      page = <WeekPage />;
+    case 'corps':
+      page = <BodyPage />;
       break;
     case 'rangs':
       page = <RanksPage />;
@@ -54,18 +61,26 @@ export function App() {
 
   return (
     <>
-      <main key={`${section}/${param ?? ''}`}>{page}</main>
-      <nav className="tabbar">
-        {TABS.map((t) => (
-          <a key={t.path} href={`#/${t.path}`} className={section === t.path ? 'on' : ''}>
+      <main key={`${section}/${param ?? ''}`} className="view">
+        {page}
+      </main>
+      <div className="dock">
+        {section !== '' && <ActiveWorkoutPill />}
+        <RestTimer />
+      </div>
+      <nav className="tabbar" aria-label="Navigation principale">
+        {TABS.map(({ path, label, Icon }) => (
+          <a key={path} href={`#/${path}`} className={section === path ? 'is-active' : ''} aria-current={section === path ? 'page' : undefined}>
             <span className="tab-icon">
-              {t.icon}
-              {t.path === '' && hasActive && <span className="live-dot" />}
+              <Icon size={22} strokeWidth={section === path ? 2.4 : 1.9} />
+              {path === '' && hasActive && <span className="tab-badge" />}
             </span>
-            <span>{t.label}</span>
+            <span>{label}</span>
           </a>
         ))}
       </nav>
+      <ConfirmHost />
+      <ToastHost />
     </>
   );
 }

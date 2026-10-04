@@ -1,21 +1,51 @@
 import type { ExerciseLog, Profile, SetEntry, Workout } from '../domain/types';
 import { getState, setState, uid } from './store';
+import { stopRest, summaryStore } from './ui';
 
 // All mutations live here so pages never hand-edit nested state.
 
+export const DEFAULT_REST = 90;
+
 export function saveProfile(profile: Profile) {
-  setState((s) => ({ ...s, profile }));
+  setState((s) => ({ ...s, profile: { ...s.profile, ...profile } }));
 }
 
-export function startWorkout() {
-  const { profile } = getState();
+/** Sets of the most recent workout that contains the exercise (for "Précédent"). */
+export function previousSetsFor(exerciseId: string): SetEntry[] {
+  const { workouts } = getState();
+  for (let i = workouts.length - 1; i >= 0; i--) {
+    const log = workouts[i].exercises.find((l) => l.exerciseId === exerciseId);
+    if (log) return log.sets;
+  }
+  return [];
+}
+
+function freshSets(exerciseId: string, count: number): SetEntry[] {
+  const prev = previousSetsFor(exerciseId);
+  const fallback = prev.filter((s) => !s.warmup).at(-1) ?? { weightKg: 0, reps: 10 };
+  return Array.from({ length: count }, (_, i) => ({
+    weightKg: prev[i]?.weightKg ?? fallback.weightKg,
+    reps: prev[i]?.reps ?? fallback.reps,
+    warmup: prev[i]?.warmup,
+    done: false,
+  }));
+}
+
+/** Starts an empty workout, or a copy of `templateId` with fresh, unvalidated sets. */
+export function startWorkout(templateId?: string) {
+  const { profile, workouts } = getState();
   if (!profile) return;
+  const template = templateId ? workouts.find((w) => w.id === templateId) : undefined;
+  const exercises: ExerciseLog[] = (template?.exercises ?? []).map((l) => ({
+    uid: uid(),
+    exerciseId: l.exerciseId,
+    sets: freshSets(l.exerciseId, l.sets.length),
+  }));
   const w: Workout = {
     id: uid(),
     startedAt: Date.now(),
     bodyweightKg: profile.bodyweightKg,
-    sex: profile.sex,
-    exercises: [],
+    exercises,
   };
   setState((s) => ({ ...s, active: w }));
 }
@@ -28,29 +58,26 @@ function updateLog(logUid: string, fn: (l: ExerciseLog) => ExerciseLog) {
   updateActive((w) => ({ ...w, exercises: w.exercises.map((l) => (l.uid === logUid ? fn(l) : l)) }));
 }
 
-/** Last performed sets for an exercise, used to pre-fill a new block. */
-export function lastSetsFor(exerciseId: string): SetEntry[] | null {
-  const { workouts } = getState();
-  for (let i = workouts.length - 1; i >= 0; i--) {
-    const log = workouts[i].exercises.find((l) => l.exerciseId === exerciseId);
-    if (log) return log.sets.filter((s) => s.done);
-  }
-  return null;
-}
-
-export function addExercise(exerciseId: string, setCount: number) {
-  const previous = lastSetsFor(exerciseId) ?? [];
-  const template = previous[previous.length - 1] ?? { weightKg: 0, reps: 10 };
-  const sets: SetEntry[] = Array.from({ length: setCount }, (_, i) => ({
-    weightKg: previous[i]?.weightKg ?? template.weightKg,
-    reps: previous[i]?.reps ?? template.reps,
-    done: false,
+export function addExercises(exerciseIds: string[], setCount: number) {
+  updateActive((w) => ({
+    ...w,
+    exercises: [...w.exercises, ...exerciseIds.map((id) => ({ uid: uid(), exerciseId: id, sets: freshSets(id, setCount) }))],
   }));
-  updateActive((w) => ({ ...w, exercises: [...w.exercises, { uid: uid(), exerciseId, sets }] }));
 }
 
 export function removeExercise(logUid: string) {
   updateActive((w) => ({ ...w, exercises: w.exercises.filter((l) => l.uid !== logUid) }));
+}
+
+export function moveExercise(logUid: string, delta: -1 | 1) {
+  updateActive((w) => {
+    const i = w.exercises.findIndex((l) => l.uid === logUid);
+    const j = i + delta;
+    if (i < 0 || j < 0 || j >= w.exercises.length) return w;
+    const exercises = [...w.exercises];
+    [exercises[i], exercises[j]] = [exercises[j], exercises[i]];
+    return { ...w, exercises };
+  });
 }
 
 export function updateSet(logUid: string, index: number, patch: Partial<SetEntry>) {
@@ -59,7 +86,7 @@ export function updateSet(logUid: string, index: number, patch: Partial<SetEntry
 
 export function addSet(logUid: string) {
   updateLog(logUid, (l) => {
-    const last = l.sets[l.sets.length - 1] ?? { weightKg: 0, reps: 10 };
+    const last = l.sets.filter((s) => !s.warmup).at(-1) ?? l.sets.at(-1) ?? { weightKg: 0, reps: 10 };
     return { ...l, finishedAt: undefined, sets: [...l.sets, { weightKg: last.weightKg, reps: last.reps, done: false }] };
   });
 }
@@ -77,22 +104,32 @@ export function reopenExercise(logUid: string) {
 }
 
 export function finishWorkout() {
-  setState((s) => {
-    if (!s.active) return s;
-    // Drop blocks with no completed set: they carry no information.
-    const exercises = s.active.exercises
-      .map((l) => ({ ...l, sets: l.sets.filter((x) => x.done && x.reps > 0) }))
-      .filter((l) => l.sets.length > 0);
-    if (!exercises.length) return { ...s, active: null };
-    const done: Workout = { ...s.active, exercises, endedAt: Date.now() };
-    return { ...s, active: null, workouts: [...s.workouts, done] };
-  });
+  const { active } = getState();
+  if (!active) return;
+  // Keep only validated sets; drop blocks left empty — they carry no information.
+  const exercises = active.exercises
+    .map((l) => ({ ...l, sets: l.sets.filter((x) => x.done && x.reps > 0) }))
+    .filter((l) => l.sets.length > 0);
+  stopRest();
+  if (!exercises.length) {
+    setState((s) => ({ ...s, active: null }));
+    return;
+  }
+  const done: Workout = { ...active, exercises, endedAt: Date.now() };
+  setState((s) => ({ ...s, active: null, workouts: [...s.workouts, done] }));
+  summaryStore.set(() => done.id);
 }
 
 export function cancelWorkout() {
+  stopRest();
   setState((s) => ({ ...s, active: null }));
 }
 
 export function deleteWorkout(id: string) {
   setState((s) => ({ ...s, workouts: s.workouts.filter((w) => w.id !== id) }));
+}
+
+export function clearHistory() {
+  stopRest();
+  setState((s) => ({ ...s, workouts: [], active: null }));
 }

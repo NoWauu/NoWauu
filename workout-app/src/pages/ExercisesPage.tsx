@@ -1,38 +1,62 @@
-import { BodyMap } from '../components/BodyMap';
-import { muscleList, useExerciseFilter } from '../components/ExercisePicker';
-import { RankBadge, RankMeter } from '../components/Rank';
+import { ChevronLeft, Lightbulb } from 'lucide-react';
+import { useMemo } from 'react';
+import { BodyMap } from '../components/body/BodyMap';
+import { ExerciseRow, useExerciseFilter } from '../components/ExercisePicker';
+import { ProgressChart } from '../components/ProgressChart';
+import { RankMeter, RankPill, TierEmblem } from '../components/Rank';
 import { EXERCISE_BY_ID } from '../data/exercises';
 import { MUSCLE_BY_ID } from '../domain/muscles';
-import { TIERS, estimate1RM, nextTierHint, scoreSets, thresholdsFor } from '../domain/ranking';
+import {
+  TIERS,
+  estimate1RM,
+  exerciseHistory,
+  nextTierHint,
+  thresholdsFor,
+  tierFromScore,
+} from '../domain/ranking';
 import type { Exercise, Profile } from '../domain/types';
 import { useRanks } from '../hooks/useRanks';
 import { navigate } from '../hooks/useRoute';
+import { formatDay, formatNumber } from '../lib/format';
 import { useAppState } from '../storage/store';
 
 export function ExercisesPage() {
-  const { list, controls } = useExerciseFilter();
+  const { sections, count, controls } = useExerciseFilter();
+  const sex = useAppState((s) => s.profile?.sex ?? 'M');
   const { best } = useRanks();
   return (
     <div className="page">
-      <h1>Exercices</h1>
-      {controls}
-      <ul className="list">
-        {list.map((e) => (
-          <li key={e.id}>
-            <button className="list-item" onClick={() => navigate(`/exos/${e.id}`)}>
-              <span className="grow">
-                <strong>{e.name}</strong>
-                <span className="muted small block">
-                  {e.equipment} · {muscleList(e)}
-                </span>
-              </span>
-              <RankBadge score={best.get(e.id)?.score ?? null} size="sm" />
-            </button>
-          </li>
-        ))}
-      </ul>
+      <header className="page-head">
+        <span className="eyebrow">{count} exercices</span>
+        <h1>Exercices</h1>
+      </header>
+      <div className="sticky-filters">{controls}</div>
+      {sections.map((s) => (
+        <section key={s.key} className="list-section">
+          <h2 className="section-label">{s.title}</h2>
+          <div className="list-group">
+            {s.items.map((e) => {
+              const score = best.get(e.id)?.score;
+              return (
+                <ExerciseRow
+                  key={e.id}
+                  ex={e}
+                  sex={sex}
+                  onClick={() => navigate(`/exos/${e.id}`)}
+                  right={score !== undefined ? <RankPill score={score} size="sm" /> : undefined}
+                />
+              );
+            })}
+          </div>
+        </section>
+      ))}
+      {!sections.length && <p className="empty">Aucun exercice ne correspond.</p>}
     </div>
   );
+}
+
+function unitOf(ex: Exercise) {
+  return ex.scoring.kind === 'reps' ? (ex.scoring.unit === 'sec' ? 's' : 'reps') : 'kg';
 }
 
 export function ExerciseDetailPage({ id }: { id: string }) {
@@ -40,142 +64,201 @@ export function ExerciseDetailPage({ id }: { id: string }) {
   const profile = useAppState((s) => s.profile);
   const workouts = useAppState((s) => s.workouts);
   const { best } = useRanks();
-  if (!ex || !profile) return <div className="page">Exercice introuvable.</div>;
+  const sex = profile?.sex ?? 'M';
+  const history = useMemo(() => (ex ? exerciseHistory(ex, workouts, sex) : []), [ex, workouts, sex]);
+
+  if (!ex || !profile) {
+    return (
+      <div className="page">
+        <p className="empty">Exercice introuvable.</p>
+      </div>
+    );
+  }
 
   const mine = best.get(ex.id);
-  const history = workouts
-    .flatMap((w) =>
-      w.exercises
-        .filter((l) => l.exerciseId === ex.id)
-        .map((l) => ({ w, r: scoreSets(ex, l.sets, w.bodyweightKg, w.sex) })),
-    )
-    .reverse()
-    .slice(0, 10);
+  const unit = unitOf(ex);
+  const thresholds = thresholdsFor(ex, profile.sex).map((t) => (ex.scoring.kind === 'reps' ? t : t * profile.bodyweightKg));
+  const record = history.reduce<(typeof history)[number] | null>((a, p) => (!a || p.value > a.value ? p : a), null);
 
   return (
     <div className="page">
       <button className="back" onClick={() => (window.history.length > 1 ? window.history.back() : navigate('/exos'))}>
-        ‹ Retour
+        <ChevronLeft size={20} /> Retour
       </button>
-      <h1>{ex.name}</h1>
-      <p className="muted no-margin">{ex.equipment}{ex.perSide ? ' · poids par côté' : ''}</p>
 
-      <section className="card">
-        <h2>Ton rang</h2>
-        <RankMeter
-          score={mine?.score ?? null}
-          hint={mine ? nextTierHint(ex, mine.value, profile.bodyweightKg, profile.sex) : null}
+      <header className="page-head">
+        <span className="eyebrow">{ex.equipment}{ex.perSide ? ' · charge par côté' : ''}</span>
+        <h1>{ex.name}</h1>
+      </header>
+
+      <section className="card ex-hero">
+        <BodyMap
+          sex={profile.sex}
+          captions
+          fill={(g) => (ex.primary.includes(g) ? 'var(--accent)' : ex.secondary.includes(g) ? 'var(--accent-soft-solid)' : null)}
         />
-      </section>
-
-      <section className="card">
-        <h2>Muscles travaillés</h2>
-        <div className="muscle-tags">
+        <div className="muscle-legend">
+          <span className="key">
+            <span className="swatch" style={{ background: 'var(--accent)' }} />
+            Principaux
+          </span>
           {ex.primary.map((g) => (
-            <span key={g} className="tag primary">{MUSCLE_BY_ID[g].name}</span>
-          ))}
-          {ex.secondary.map((g) => (
-            <span key={g} className="tag secondary">{MUSCLE_BY_ID[g].name}</span>
+            <span key={g} className="tag tag-strong">{MUSCLE_BY_ID[g].name}</span>
           ))}
         </div>
-        <BodyMap
-          colorFor={(g) =>
-            ex.primary.includes(g) ? 'var(--accent)' : ex.secondary.includes(g) ? 'var(--accent-soft)' : 'var(--muscle-idle)'
-          }
-        />
-      </section>
-
-      <section className="card">
-        <h2>Comment le faire</h2>
-        <ol className="steps">
-          {ex.steps.map((s, i) => (
-            <li key={i}>{s}</li>
-          ))}
-        </ol>
-        {ex.tips.length > 0 && (
-          <>
-            <h3>Conseils</h3>
-            <ul className="tips">
-              {ex.tips.map((t, i) => (
-                <li key={i}>{t}</li>
-              ))}
-            </ul>
-          </>
+        {ex.secondary.length > 0 && (
+          <div className="muscle-legend">
+            <span className="key">
+              <span className="swatch" style={{ background: 'var(--accent-soft-solid)' }} />
+              Secondaires
+            </span>
+            {ex.secondary.map((g) => (
+              <span key={g} className="tag">{MUSCLE_BY_ID[g].name}</span>
+            ))}
+          </div>
         )}
       </section>
 
       <section className="card">
-        <h2>Paliers</h2>
-        <StandardsTable ex={ex} profile={profile} />
+        <RankMeter
+          label="Ton rang"
+          score={mine?.score ?? null}
+          emblemSize={56}
+          hint={mine ? nextTierHint(ex, mine.value, profile.bodyweightKg, profile.sex) : null}
+        />
+        {record && (
+          <dl className="facts">
+            <div>
+              <dt>Record</dt>
+              <dd className="tabular">
+                {ex.scoring.kind === 'reps'
+                  ? `${record.bestSet.reps} ${unit}`
+                  : `${formatNumber(record.bestSet.weightKg)} × ${record.bestSet.reps}`}
+              </dd>
+            </div>
+            {ex.scoring.kind === 'load' && (
+              <div>
+                <dt>1RM estimé</dt>
+                <dd className="tabular">{formatNumber(Math.round(record.value * 10) / 10)} kg</dd>
+              </div>
+            )}
+            <div>
+              <dt>Séances</dt>
+              <dd className="tabular">{history.length}</dd>
+            </div>
+          </dl>
+        )}
       </section>
 
       {history.length > 0 && (
         <section className="card">
-          <h2>Historique</h2>
-          <ul className="list compact">
-            {history.map(({ w, r }) => (
-              <li key={w.id} className="row between">
-                <span>
-                  {new Date(w.startedAt).toLocaleDateString('fr-FR')}
-                  {r.bestSet && (
-                    <span className="muted small block">
-                      {ex.scoring.kind === 'reps'
-                        ? `${r.bestSet.reps} ${ex.scoring.unit === 'sec' ? 's' : 'reps'}`
-                        : `${r.bestSet.weightKg} kg × ${r.bestSet.reps}`}
-                    </span>
-                  )}
+          <div className="card-head">
+            <h2 className="card-title">Progression</h2>
+            <span className="text-3 small">{ex.scoring.kind === 'load' ? '1RM estimé' : 'Meilleure série'}</span>
+          </div>
+          <ProgressChart points={history} thresholds={thresholds} unit={unit} />
+        </section>
+      )}
+
+      <section className="card">
+        <h2 className="card-title">Exécution</h2>
+        <ol className="steps">
+          {ex.steps.map((s, i) => (
+            <li key={i}>
+              <span className="step-num">{i + 1}</span>
+              <span>{s}</span>
+            </li>
+          ))}
+        </ol>
+        {ex.tips.length > 0 && (
+          <div className="tips">
+            <Lightbulb size={18} />
+            <ul>
+              {ex.tips.map((t, i) => (
+                <li key={i}>{t}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </section>
+
+      <section className="card">
+        <div className="card-head">
+          <h2 className="card-title">Paliers</h2>
+          <span className="text-3 small">
+            {profile.bodyweightKg} kg · {profile.sex === 'M' ? 'H' : 'F'}
+          </span>
+        </div>
+        <StandardsTable ex={ex} profile={profile} current={mine?.score ?? null} />
+      </section>
+
+      {history.length > 0 && (
+        <section>
+          <h2 className="section-title">Historique</h2>
+          <div className="list-group">
+            {[...history].reverse().slice(0, 12).map((p) => (
+              <div key={p.workoutId} className="detail-row">
+                <span className="ex-row-text">
+                  <span className="ex-row-name">{formatDay(p.date, { weekday: 'short', day: 'numeric', month: 'short' })}</span>
+                  <span className="ex-row-meta tabular">
+                    {ex.scoring.kind === 'reps'
+                      ? `${p.bestSet.reps} ${unit}`
+                      : `${formatNumber(p.bestSet.weightKg)} × ${p.bestSet.reps} · 1RM ${formatNumber(Math.round(p.value))} kg`}
+                  </span>
                 </span>
-                <RankBadge score={r.score} size="sm" />
-              </li>
+                <RankPill score={p.score} size="sm" />
+              </div>
             ))}
-          </ul>
+          </div>
         </section>
       )}
     </div>
   );
 }
 
-/** What each tier means concretely for *your* bodyweight. */
-function StandardsTable({ ex, profile }: { ex: Exercise; profile: Profile }) {
+/** What each tier means concretely for *your* bodyweight; your tier is highlighted. */
+function StandardsTable({ ex, profile, current }: { ex: Exercise; profile: Profile; current: number | null }) {
   const t = thresholdsFor(ex, profile.sex);
   const bw = profile.bodyweightKg;
   const s = ex.scoring;
+  const currentIndex = current === null ? -1 : tierFromScore(current).index;
 
   const describe = (ratio: number) => {
-    if (s.kind === 'reps') return `${Math.ceil(ratio)} ${s.unit === 'sec' ? 's' : 'reps'}`;
+    if (s.kind === 'reps') return { main: `${Math.ceil(ratio)} ${s.unit === 'sec' ? 's' : 'reps'}`, sub: 'en une série' };
     const f = s.bodyweightFactor ?? 0;
     const total = ratio * bw;
     if (f > 0) {
       const added = total - f * bw;
       if (added <= 0) {
-        // Express it as reps at bodyweight via inverse Epley.
         const reps = Math.max(1, Math.ceil(30 * (total / (f * bw) - 1)));
-        return `${reps} reps au poids du corps`;
+        return { main: `${reps} reps`, sub: 'au poids du corps' };
       }
-      return `1RM avec +${Math.round(added)} kg de lest`;
+      return { main: `+${Math.round(added)} kg`, sub: 'de lest (1RM)' };
     }
-    return `1RM ${Math.round(total)} kg${ex.perSide ? ' / côté' : ''} (≈ ${Math.round(total / estimate1RM(1, 8))} kg × 8)`;
+    return {
+      main: `${Math.round(total)} kg`,
+      sub: `1RM${ex.perSide ? ' / côté' : ''} · ≈ ${Math.round(total / estimate1RM(1, 8))} kg × 8`,
+    };
   };
 
   return (
-    <>
-      <table className="standards">
-        <tbody>
-          {TIERS.slice(1).map((tier, i) => (
-            <tr key={tier.id}>
-              <td>
-                <span className="dot" style={{ background: tier.color }} />
-                {tier.name}
-              </td>
-              <td>{describe(t[i])}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <p className="muted small">
-        Calculé pour {bw} kg ({profile.sex === 'M' ? 'homme' : 'femme'}).{' '}
-        {s.kind === 'load' ? 'Basé sur le 1RM estimé de ta meilleure série (formule d’Epley).' : 'Basé sur ta meilleure série.'}
-      </p>
-    </>
+    <div className="standards">
+      {TIERS.map((tier, i) => {
+        const d = i === 0 ? { main: 'Départ', sub: 'dès la première série' } : describe(t[i - 1]);
+        return (
+          <div key={tier.id} className={`standard-row ${i === currentIndex ? 'is-current' : ''}`}>
+            <TierEmblem score={i + 0.5} size={30} />
+            <span className="standard-name">
+              {tier.name}
+              {i === currentIndex && <span className="you-are-here">Toi</span>}
+            </span>
+            <span className="standard-value">
+              <strong className="tabular">{d.main}</strong>
+              <span className="text-3 small">{d.sub}</span>
+            </span>
+          </div>
+        );
+      })}
+    </div>
   );
 }

@@ -12,16 +12,25 @@ import type { Exercise, MuscleGroupId, SetEntry, Sex, Workout } from './types';
 export interface Tier {
   id: string;
   name: string;
+  /** Main colour: muscle fills, bars, emblem body. */
   color: string;
+  /** Darker / lighter steps of the same hue, for emblem gradients. */
+  dark: string;
+  light: string;
 }
 
+// A "heat" scale: every tier is lighter than the one before (OKLCH L 0.48 →
+// 0.95), so the order reads even in grayscale or with colour-blindness, while
+// the hue walks violet → magenta → orange → gold → ice-white for identity.
+// Validated: adjacent CVD ΔE ≥ 9.7, normal-vision ΔE ≥ 16.3 on the dark surface.
+// Tier colour is never the only cue: emblems add a shape, labels add the name.
 export const TIERS: Tier[] = [
-  { id: 'novice', name: 'Novice', color: '#8d99ae' },
-  { id: 'intermediate', name: 'Intermédiaire', color: '#4cc9f0' },
-  { id: 'advanced', name: 'Avancé', color: '#43aa8b' },
-  { id: 'elite', name: 'Élite', color: '#f9c74f' },
-  { id: 'monster', name: 'Monster', color: '#f3722c' },
-  { id: 'legend', name: 'Legend', color: '#c77dff' },
+  { id: 'novice', name: 'Novice', color: '#585b7a', dark: '#3a3d5a', light: '#8083a4' },
+  { id: 'intermediate', name: 'Intermédiaire', color: '#8e60d2', dark: '#65389f', light: '#b28fef' },
+  { id: 'advanced', name: 'Avancé', color: '#e65aa5', dark: '#b2307a', light: '#ff90c8' },
+  { id: 'elite', name: 'Élite', color: '#ff8152', dark: '#d4552b', light: '#ffb988' },
+  { id: 'monster', name: 'Monster', color: '#ffc336', dark: '#d98b09', light: '#ffe586' },
+  { id: 'legend', name: 'Legend', color: '#bbfcff', dark: '#71c5df', light: '#efffff' },
 ];
 
 export const MAX_SCORE = TIERS.length;
@@ -46,6 +55,11 @@ export function estimate1RM(weightKg: number, reps: number): number {
   if (weightKg <= 0 || reps <= 0) return 0;
   if (reps === 1) return weightKg;
   return weightKg * (1 + Math.min(reps, 20) / 30);
+}
+
+/** A set that counts: validated, not a warm-up, at least one rep. */
+export function isWorkingSet(set: SetEntry): boolean {
+  return set.done && !set.warmup && set.reps > 0;
 }
 
 /** The raw number a set is judged on: e1RM/bodyweight ratio, or a rep count. */
@@ -105,7 +119,7 @@ export function scoreSets(ex: Exercise, sets: SetEntry[], bodyweightKg: number, 
   const thresholds = thresholdsFor(ex, sex);
   let best: ExerciseResult = { score: 0, value: 0, bestSet: null };
   for (const set of sets) {
-    if (!set.done) continue;
+    if (!isWorkingSet(set)) continue;
     const value = setPerformance(ex, set, bodyweightKg);
     if (value > best.value) best = { score: scoreFromValue(value, thresholds), value, bestSet: set };
   }
@@ -119,9 +133,41 @@ export function nextTierHint(ex: Exercise, value: number, bodyweightKg: number, 
   if (next === undefined || next === t[t.length - 1]) return null;
   const s = ex.scoring;
   if (s.kind === 'reps') return `+${Math.ceil(next - value)} ${s.unit === 'sec' ? 's' : 'reps'}`;
-  // Express the gap as extra 1RM in kg (per side when relevant).
-  const kg = (next - value) * bodyweightKg;
-  return `+${(Math.ceil(kg * 2) / 2).toFixed(1)} kg de 1RM estimé`;
+  // Express the gap as extra estimated 1RM, rounded up to the next 0.5 kg.
+  const kg = Math.ceil((next - value) * bodyweightKg * 2) / 2;
+  return `+${String(kg).replace('.', ',')} kg au 1RM`;
+}
+
+/** Absolute value for display: estimated 1RM in kg (load) or reps / seconds. */
+export function displayValue(ex: Exercise, ratioOrReps: number, bodyweightKg: number): number {
+  return ex.scoring.kind === 'reps' ? ratioOrReps : ratioOrReps * bodyweightKg;
+}
+
+export interface HistoryPoint {
+  date: number;
+  workoutId: string;
+  /** Estimated 1RM in kg, or max reps / seconds. */
+  value: number;
+  score: number;
+  bestSet: SetEntry;
+}
+
+/** Best performance of an exercise in every workout that contains it, oldest first. */
+export function exerciseHistory(ex: Exercise, workouts: Workout[], sex: Sex): HistoryPoint[] {
+  const points: HistoryPoint[] = [];
+  for (const w of workouts) {
+    const sets = w.exercises.filter((l) => l.exerciseId === ex.id).flatMap((l) => l.sets);
+    const r = scoreSets(ex, sets, w.bodyweightKg, sex);
+    if (!r.bestSet) continue;
+    points.push({
+      date: w.startedAt,
+      workoutId: w.id,
+      value: displayValue(ex, r.value, w.bodyweightKg),
+      score: r.score,
+      bestSet: r.bestSet,
+    });
+  }
+  return points.sort((a, b) => a.date - b.date);
 }
 
 // ---------------------------------------------------------------------------
@@ -137,12 +183,14 @@ export interface BestEntry {
 
 /**
  * Best score ever reached per exercise. Each workout is scored with the
- * bodyweight recorded *in that workout*. `sinceMs` lets you restrict to a
- * recent window if you prefer a rank that can decay.
+ * bodyweight recorded *in that workout* (a fact of that day) and the current
+ * profile's standards (a setting). `sinceMs` lets you restrict to a recent
+ * window if you prefer a rank that can decay.
  */
 export function bestByExercise(
   workouts: Workout[],
   exercises: Record<string, Exercise>,
+  sex: Sex,
   sinceMs = 0,
 ): Map<string, BestEntry> {
   const best = new Map<string, BestEntry>();
@@ -151,7 +199,7 @@ export function bestByExercise(
     for (const log of w.exercises) {
       const ex = exercises[log.exerciseId];
       if (!ex) continue;
-      const r = scoreSets(ex, log.sets, w.bodyweightKg, w.sex);
+      const r = scoreSets(ex, log.sets, w.bodyweightKg, sex);
       if (r.value <= 0) continue;
       const prev = best.get(ex.id);
       if (!prev || r.score > prev.score || (r.score === prev.score && r.value > prev.value)) {

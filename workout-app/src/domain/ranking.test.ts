@@ -10,6 +10,7 @@ import {
   thresholdsFor,
   tierFromScore,
 } from './ranking';
+import { workoutOutcomes, recordCounts } from './stats';
 import { startOfWeek, weeklyVolume } from './volume';
 import type { Workout } from './types';
 
@@ -17,7 +18,7 @@ const bench = EXERCISE_BY_ID['bench-press'];
 const pullUp = EXERCISE_BY_ID['pull-up'];
 
 function workout(id: string, startedAt: number, exercises: Workout['exercises'], bw = 80): Workout {
-  return { id, startedAt, bodyweightKg: bw, sex: 'M', exercises };
+  return { id, startedAt, bodyweightKg: bw, exercises };
 }
 
 describe('estimate1RM', () => {
@@ -72,6 +73,18 @@ describe('scoreSets', () => {
     expect(bw.value).toBeCloseTo(estimate1RM(80, 8) / 80);
     expect(weighted.score).toBeGreaterThan(bw.score);
   });
+  it('ignores warm-up sets', () => {
+    const r = scoreSets(
+      bench,
+      [
+        { weightKg: 100, reps: 5, done: true, warmup: true },
+        { weightKg: 60, reps: 5, done: true },
+      ],
+      80,
+      'M',
+    );
+    expect(r.bestSet?.weightKg).toBe(60);
+  });
   it('uses lower thresholds for women', () => {
     expect(thresholdsFor(bench, 'F')[1]).toBeLessThan(thresholdsFor(bench, 'M')[1]);
   });
@@ -85,7 +98,7 @@ describe('aggregation', () => {
       { uid: '2', exerciseId: 'squat', sets: [{ weightKg: 108, reps: 1, done: true }] },
     ]),
   ];
-  const best = bestByExercise(ws, EXERCISE_BY_ID);
+  const best = bestByExercise(ws, EXERCISE_BY_ID, 'M');
 
   it('keeps the best score per exercise across workouts', () => {
     expect(best.get('bench-press')?.workoutId).toBe('a');
@@ -98,7 +111,7 @@ describe('aggregation', () => {
     expect(groups.find((g) => g.group === 'biceps')!.score).toBeNull();
     const global = globalRank(groups);
     // chest, quads, glutes rated (squat is primary on quads + glutes)
-    expect(global.coverage).toBeCloseTo(3 / 13);
+    expect(global.coverage).toBeCloseTo(3 / 15);
     expect(global.score).toBeCloseTo(2);
   });
 });
@@ -122,5 +135,34 @@ describe('weeklyVolume', () => {
     expect(vol.chest).toBe(2);
     expect(vol.triceps).toBe(1);
     expect(vol.quads).toBe(0);
+  });
+  it('does not count warm-ups', () => {
+    const monday = startOfWeek(new Date(2026, 9, 7));
+    const w = workout('w', monday.getTime() + 3600_000, [
+      { uid: '1', exerciseId: 'bench-press', sets: [{ weightKg: 40, reps: 10, done: true, warmup: true }] },
+    ]);
+    const vol = weeklyVolume([w], EXERCISE_BY_ID, monday, new Date(monday.getTime() + 7 * 864e5));
+    expect(vol.chest).toBe(0);
+  });
+});
+
+describe('workout outcomes', () => {
+  const set = (weightKg: number, reps: number) => ({ weightKg, reps, done: true });
+  const a = workout('a', 1, [{ uid: '1', exerciseId: 'bench-press', sets: [set(60, 5)] }]);
+  const b = workout('b', 2, [
+    { uid: '1', exerciseId: 'bench-press', sets: [set(90, 3)] },
+    { uid: '2', exerciseId: 'squat', sets: [set(100, 5)] },
+  ]);
+  const c = workout('c', 3, [{ uid: '1', exerciseId: 'bench-press', sets: [set(70, 5)] }]);
+
+  it('flags first times, records and tier-ups against earlier workouts only', () => {
+    const out = workoutOutcomes(b, [a, b, c], EXERCISE_BY_ID, 'M');
+    expect(out.find((o) => o.exerciseId === 'bench-press')).toMatchObject({ status: 'record', tierUp: true });
+    expect(out.find((o) => o.exerciseId === 'squat')?.status).toBe('first');
+    expect(workoutOutcomes(c, [a, b, c], EXERCISE_BY_ID, 'M')[0].status).toBe('none');
+  });
+  it('counts beaten records per workout in one pass', () => {
+    const counts = recordCounts([c, a, b], EXERCISE_BY_ID, 'M');
+    expect([counts.get('a'), counts.get('b'), counts.get('c')]).toEqual([0, 1, 0]);
   });
 });
