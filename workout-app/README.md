@@ -17,13 +17,20 @@ npm test         # tests du moteur de rangs
 npm run build    # build statique dans dist/
 ```
 
-## Installer sur le téléphone
+## Installer sur le téléphone (sans ligne de commande)
 
-Héberge `dist/` sur n'importe quel hébergeur statique gratuit (Vercel, Netlify,
-Cloudflare Pages, GitHub Pages ; `base: './'` dans `vite.config.ts` fait marcher le
-build sous un sous-chemin). Ouvre l'URL sur le téléphone puis
-« Ajouter à l'écran d'accueil ». Sur Vercel : importe le repo, *Root Directory* =
-`workout-app`, preset Vite.
+Hébergement gratuit via GitHub Pages ; le workflow `.github/workflows/deploy-workout-app.yml`
+construit et publie l'app à chaque push sur `main` qui touche `workout-app/`.
+
+1. **Settings → Pages → Build and deployment → Source : « GitHub Actions »** (une fois).
+2. Fusionne la branche dans `main` (pull request → *Merge*). Le déploiement se lance
+   seul (onglet **Actions**, ~1 min), ou via *Run workflow*.
+3. Ouvre `https://<utilisateur>.github.io/<repo>/` sur le téléphone, puis :
+   - **iPhone** (Safari) : Partager → « Sur l'écran d'accueil » ;
+   - **Android** (Chrome) : ⋮ → « Installer l'application ».
+
+Utilise ensuite toujours l'icône : sur iPhone, l'app installée a son propre stockage,
+séparé de l'onglet Safari. Les mises à jour arrivent toutes seules à la réouverture.
 
 ## Organisation
 
